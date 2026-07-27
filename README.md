@@ -58,3 +58,11 @@ Uso académico y de acompañamiento. **No es un instrumento de diagnóstico.**
 - **Roles y RLS por política** en el esquema clínico (admin, clínico, facilitador, capturista, supervisor) con pruebas por rol; el facilitador no puede ver pacientes ni historias.
 - **Notas firmadas inmutables** (corrección solo por adenda) y **auditoría automática** de cambios.
 - Usuario administrador real en Supabase Auth. Detalle completo y claves del equipo: `docs/FASE2.md`.
+
+
+## Panel de administración (login real)
+
+- Archivo: **`admin.html`** → URL `https://eleevatemx.github.io/cursodeverano/admin.html`
+- **Inicio de sesión real** con Supabase Auth (correo + contraseña). El acceso y lo que ve cada quien lo deciden los **roles y RLS** (admin/supervisor entran; otros roles se bloquean).
+- Secciones: Resumen (KPIs y gráficas), Sesiones del estudio (tabla + CSV), Participantes, Instrumentos, Usuarios y roles, y Auditoría.
+- Diferencia con `dashboard.html`: el dashboard usa una *clave compartida* para el equipo de campo; el **panel admin** usa *cuenta personal* con permisos por rol y registro de auditoría. Es la vía segura y la base de la Fase 3.

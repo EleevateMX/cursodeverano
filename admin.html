@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3864">
+<title>Panel de administración · Ansiedad social · SNTSS VI</title>
+<script src="chart.umd.js"></script>
+<style>
+  :root{--navy:#1F3864;--blue:#2E5496;--sky:#4a90d9;--light:#EAF0F8;--accent:#C55A11;--green:#3f9e5a;
+    --purple:#7c4dbd;--red:#d9534f;--gold:#E9B10A;--teal:#159a9c;
+    --ink:#22303f;--muted:#6b7a8d;--bg:#f4f7fc;--card:#fff;--line:#dfe7f2;--shadow:0 8px 24px rgba(31,56,100,.10)}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  a{color:var(--blue)}
+  /* ===== Login ===== */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#eef3fb,#e2ebf8)}
+  .lcard{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:26px;max-width:390px;width:100%}
+  .lcard h1{font-size:1.25rem;margin:.2em 0 0;color:var(--navy)}
+  .lcard p.sub{font-size:.85rem;color:var(--muted);margin:.3em 0 16px}
+  .field{margin:10px 0}
+  .field label{display:block;font-weight:700;font-size:.8rem;margin-bottom:6px;color:var(--navy)}
+  .field input{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:1rem;font-family:inherit}
+  .field input:focus{outline:2px solid var(--sky)}
+  .btn{display:block;width:100%;border:none;border-radius:12px;padding:13px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.1s}
+  .btn:active{transform:scale(.98)} .btn:disabled{opacity:.5}
+  .btn-p{background:var(--blue);color:#fff}
+  .msg{font-size:.82rem;font-weight:700;margin-top:10px;display:none}
+  .msg.err{color:var(--red);display:block} .msg.ok{color:var(--green);display:block}
+  .brandrow{display:flex;align-items:center;gap:10px}
+  .logo{width:40px;height:40px;border-radius:11px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+  /* ===== App shell ===== */
+  #app{display:none;grid-template-columns:230px 1fr;min-height:100vh}
+  aside{background:var(--navy);color:#dfe8f7;padding:16px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+  aside .top{display:flex;align-items:center;gap:10px;padding:6px 8px 14px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:8px}
+  aside .top b{font-size:.95rem;color:#fff}
+  aside .top small{display:block;color:#9fb6da;font-size:.7rem}
+  nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:#cdddf5;
+    padding:11px 12px;border-radius:10px;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  nav button:hover{background:rgba(255,255,255,.08)}
+  nav button.active{background:var(--blue);color:#fff}
+  nav button .ic{width:18px;height:18px;flex:0 0 18px}
+  aside .foot{margin-top:auto;font-size:.72rem;color:#9fb6da;padding:8px}
+  main{padding:20px 24px 48px;overflow:auto}
+  header.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px}
+  header.bar h2{margin:0;font-size:1.3rem;color:var(--navy)}
+  .who{display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--muted)}
+  .who b{color:var(--ink)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.7rem;font-weight:800;color:#fff}
+  .btn-sm{padding:8px 12px;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .btn-sm.acc{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .disc{font-size:.72rem;color:#8a6d1f;background:rgba(233,177,10,.12);border:1px solid rgba(233,177,10,.4);border-radius:10px;padding:8px 12px;margin:10px 0}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:12px 0}
+  .kpi{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;border-top:4px solid var(--blue)}
+  .kpi .v{font-size:1.7rem;font-weight:800;color:var(--navy)}
+  .kpi .l{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .kpi.foco{border-top-color:var(--accent)} .kpi.ok{border-top-color:var(--green)} .kpi.warn{border-top-color:var(--red)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+  .card h3{margin:0 0 2px;font-size:.95rem;color:var(--navy)}
+  .card .s{font-size:.74rem;color:var(--muted);margin:0 0 10px}
+  .chartbox{position:relative;height:250px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px;align-items:center}
+  .toolbar select,.toolbar input{padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.83rem;font-weight:600;color:var(--ink);background:#fff}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{text-align:left;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--line);padding:8px}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:hover td{background:#f7faff}
+  .num{font-variant-numeric:tabular-nums;font-weight:700}
+  .empty{padding:36px;text-align:center;color:var(--muted)} .empty b{color:var(--navy)}
+  .load{display:flex;gap:10px;align-items:center;color:var(--muted);font-weight:700;padding:24px;justify-content:center}
+  .dl{width:9px;height:9px;border-radius:50%;background:var(--blue);animation:b 1s infinite alternate}@keyframes b{to{transform:translateY(-6px);opacity:.4}}
+  .hidden{display:none!important}
+  .tag{font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:10px;background:var(--light);color:var(--navy)}
+  .rolechip{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:10px;color:#fff;margin-right:4px}
+</style>
+</head>
+<body>
+<!-- ================= LOGIN ================= -->
+<div id="login">
+  <div class="lcard">
+    <div class="brandrow"><div class="logo">SV</div>
+      <div><h1>Panel de administración</h1><p class="sub" style="margin:0">Ansiedad social · Curso de verano · SNTSS VI</p></div>
+    </div>
+    <div style="height:14px"></div>
+    <form id="loginForm" autocomplete="on">
+      <div class="field"><label>Correo</label><input id="email" type="email" autocomplete="username" placeholder="correo@dominio.com" required></div>
+      <div class="field"><label>Contraseña</label><input id="pass" type="password" autocomplete="current-password" placeholder="••••••••" required></div>
+      <button class="btn btn-p" id="loginBtn" type="submit">Iniciar sesión</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+    <p class="sub" style="margin-top:14px">Acceso solo para personal autorizado. Herramienta de observación; <b>no constituye diagnóstico</b>.</p>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <aside>
+    <div class="top"><div class="logo" style="background:var(--blue)">SV</div><div><b>Admin</b><small id="orgName">SNTSS VI</small></div></div>
+    <nav id="nav">
+      <button data-sec="resumen" class="active"><span class="ic">📊</span> Resumen</button>
+      <button data-sec="sesiones"><span class="ic">🗂️</span> Sesiones del estudio</button>
+      <button data-sec="participantes"><span class="ic">🧒</span> Participantes</button>
+      <button data-sec="instrumentos"><span class="ic">📋</span> Instrumentos</button>
+      <button data-sec="usuarios"><span class="ic">👥</span> Usuarios y roles</button>
+      <button data-sec="auditoria"><span class="ic">🔎</span> Auditoría</button>
+    </nav>
+    <div class="foot">Panel v1 · Fase 3 (inicio)<br>Datos protegidos por rol (RLS).</div>
+  </aside>
+  <main>
+    <header class="bar">
+      <h2 id="secTitle">Resumen</h2>
+      <div class="who"><span id="roleChips"></span><b id="whoEmail"></b><button class="btn-sm" onclick="logout()">Salir</button></div>
+    </header>
+    <div class="disc">Los índices (0–100) son <b>orientativos</b> y sirven para el acompañamiento y el expediente. <b>No constituyen diagnóstico</b>; su interpretación se hace por grupo de edad con validación profesional.</div>
+    <div id="view"><div class="load"><span class="dl"></span> Cargando…</div></div>
+  </main>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const SB="https://sclqzavebwinezpivmwr.supabase.co";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbHF6YXZlYndpbmV6cGl2bXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDMzNjUsImV4cCI6MjA5NzIxOTM2NX0.khNF90QxEqh1jEOxdtseREfWLmGAW-3cVJpots4VbTc";
+const SS_KEY="admin_sess_v1";
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=s=>{try{return new Date(s).toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});}catch(e){return s||'';}};
+let SESS=null, ROLES=[], charts={};
+
+/* ================= AUTH ================= */
+function loadSess(){try{SESS=JSON.parse(sessionStorage.getItem(SS_KEY)||'null');}catch(e){SESS=null;}}
+function saveSess(){sessionStorage.setItem(SS_KEY,JSON.stringify(SESS));}
+function clearSess(){SESS=null;sessionStorage.removeItem(SS_KEY);}
+
+async function login(email,password){
+  const r=await fetch(`${SB}/auth/v1/token?grant_type=password`,{method:'POST',
+    headers:{'apikey':ANON,'Content-Type':'application/json'},
+    body:JSON.stringify({email,password})});
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.error_description||d.msg||d.error||'No se pudo iniciar sesión');
+  SESS={access_token:d.access_token,refresh_token:d.refresh_token,email:(d.user&&d.user.email)||email,
+        exp:Date.now()+((d.expires_in||3600)*1000)};
+  saveSess();
+}
+async function refresh(){
+  if(!SESS||!SESS.refresh_token) return false;
+  const r=await fetch(`${SB}/auth/v1/token?grant_type=refresh_token`,{method:'POST',
+    headers:{'apikey':ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SESS.refresh_token})});
+  if(!r.ok){clearSess();return false;}
+  const d=await r.json();
+  SESS.access_token=d.access_token;SESS.refresh_token=d.refresh_token;SESS.exp=Date.now()+((d.expires_in||3600)*1000);saveSess();return true;
+}
+async function logout(){
+  try{await fetch(`${SB}/auth/v1/logout`,{method:'POST',headers:{'apikey':ANON,'Authorization':'Bearer '+SESS.access_token}});}catch(e){}
+  clearSess();location.reload();
+}
+/* API helper con esquema y refresh automático */
+async function api(path,{method='GET',body=null,schema=null}={}){
+  if(SESS && Date.now()>SESS.exp-5000) await refresh();
+  const h={'apikey':ANON,'Authorization':'Bearer '+SESS.access_token};
+  if(schema){h[method==='GET'?'Accept-Profile':'Content-Profile']=schema;}
+  if(body){h['Content-Type']='application/json';}
+  let r=await fetch(`${SB}/rest/v1/${path}`,{method,headers:h,body:body?JSON.stringify(body):null});
+  if(r.status===401 && await refresh()){h.Authorization='Bearer '+SESS.access_token;r=await fetch(`${SB}/rest/v1/${path}`,{method,headers:h,body:body?JSON.stringify(body):null});}
+  if(!r.ok) throw new Error('HTTP '+r.status+' en '+path);
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
+
+/* ================= ARRANQUE ================= */
+loadSess();
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const b=document.getElementById('loginBtn'),m=document.getElementById('loginMsg');
+  b.disabled=true;b.textContent='Entrando…';m.className='msg';
+  try{
+    await login(document.getElementById('email').value.trim(),document.getElementById('pass').value);
+    await entrarApp();
+  }catch(err){m.textContent=err.message;m.className='msg err';b.disabled=false;b.textContent='Iniciar sesión';}
+});
+(async function boot(){ if(SESS){ try{await entrarApp();}catch(e){clearSess();} } })();
+
+async function entrarApp(){
+  // verificar rol
+  ROLES=(await api('user_roles?select=role',{schema:'clinico'})).map(x=>x.role);
+  const puede=ROLES.some(r=>['admin','supervisor'].includes(r));
+  if(!puede){ clearSess(); const m=document.getElementById('loginMsg'); m.textContent='Tu cuenta no tiene rol de administrador o supervisor.'; m.className='msg err';
+    document.getElementById('loginBtn').disabled=false; document.getElementById('loginBtn').textContent='Iniciar sesión'; return; }
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='grid';
+  document.getElementById('whoEmail').textContent=SESS.email;
+  const cols={admin:'#C55A11',supervisor:'#159a9c',clinico:'#2E5496',facilitador:'#3f9e5a',capturista:'#7c4dbd'};
+  document.getElementById('roleChips').innerHTML=[...new Set(ROLES)].map(r=>`<span class="rolechip" style="background:${cols[r]||'#6b7a8d'}">${esc(r)}</span>`).join('');
+  document.querySelectorAll('#nav button').forEach(btn=>btn.onclick=()=>show(btn.dataset.sec));
+  show('resumen');
+}
+
+/* ================= NAVEGACIÓN ================= */
+const TITLES={resumen:'Resumen',sesiones:'Sesiones del estudio',participantes:'Participantes',instrumentos:'Instrumentos',usuarios:'Usuarios y roles',auditoria:'Auditoría'};
+function show(sec){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.sec===sec));
+  document.getElementById('secTitle').textContent=TITLES[sec];
+  const v=document.getElementById('view'); v.innerHTML='<div class="load"><span class="dl"></span> Cargando…</div>';
+  ({resumen:vResumen,sesiones:vSesiones,participantes:vParticipantes,instrumentos:vInstrumentos,usuarios:vUsuarios,auditoria:vAuditoria}[sec])(v)
+    .catch(e=>{v.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`;});
+}
+function destroy(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+const bandOf=r=>{const b=(r.respuestas&&r.respuestas.banda)||(r.juegos||'').split(':')[0];const e=r.edad||0;
+  return ['6-7','8-9','10-11','12-13','14'].includes(b)?b:(e<=7?'6-7':e<=9?'8-9':e<=11?'10-11':e<=13?'12-13':'14');};
+const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:null;
+
+/* ================= VISTAS ================= */
+async function vResumen(v){
+  const [res,ses]=await Promise.all([
+    api('rpc/clinico_resumen',{method:'POST',body:{}}),
+    api('obs_sesiones?select=ansiedad_social,red_apoyo,nivel_global,edad,semana,respuestas,juegos&order=created_at.asc&limit=2000')
+  ]);
+  const r0=(res&&res[0])||{sesiones:0,participantes:0,eventos_auditoria:0};
+  const soc=ses.map(x=>+x.ansiedad_social).filter(n=>!isNaN(n));
+  const ap=ses.map(x=>+x.red_apoyo).filter(n=>!isNaN(n));
+  const alerta=ses.filter(x=>['moderado','marcado'].includes(x.nivel_global)).length;
+  v.innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="v">${r0.sesiones}</div><div class="l">Sesiones</div></div>
+      <div class="kpi"><div class="v">${r0.participantes}</div><div class="l">Participantes</div></div>
+      <div class="kpi foco"><div class="v">${soc.length?Math.round(avg(soc)):'—'}</div><div class="l">Ansiedad social prom.</div></div>
+      <div class="kpi warn"><div class="v">${ses.length?Math.round(alerta/ses.length*100):0}%</div><div class="l">Moderado / marcado</div></div>
+      <div class="kpi ok"><div class="v">${ap.length?Math.round(avg(ap)):'—'}</div><div class="l">Red de apoyo prom.</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Ansiedad social por grupo de edad</h3><p class="s">Promedio 0–100 · con n por grupo</p><div class="chartbox"><canvas id="chB"></canvas></div></div>
+      <div class="card"><h3>Evolución por semana</h3><p class="s">Ansiedad social y red de apoyo</p><div class="chartbox"><canvas id="chS"></canvas></div></div>
+    </div>
+    ${ses.length?'':'<div class="empty" style="margin-top:14px"><b>Aún no hay sesiones capturadas.</b><br>Cuando el equipo aplique el instrumento, aquí aparecerán las métricas.</div>'}`;
+  if(!ses.length) return;
+  const BAND=['6-7','8-9','10-11','12-13','14'];
+  const byB=BAND.map(b=>{const a=ses.filter(x=>bandOf(x)===b).map(x=>+x.ansiedad_social).filter(n=>!isNaN(n));return{b,n:a.length,m:avg(a)};});
+  destroy('B');charts.B=new Chart(document.getElementById('chB'),{type:'bar',
+    data:{labels:byB.map(x=>x.b+(x.n?` (n=${x.n})`:'')),datasets:[{data:byB.map(x=>x.m==null?null:Math.round(x.m)),
+      backgroundColor:byB.map(x=>x.m==null?'#e4ebf5':x.m<25?'#3f9e5a':x.m<45?'#9bbf3f':x.m<65?'#E9B10A':'#d9534f'),borderRadius:7,maxBarThickness:52}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});
+  const sem=[1,2,3],ln=k=>sem.map(s=>{const a=ses.filter(x=>+x.semana===s).map(x=>+x[k]).filter(n=>!isNaN(n));return a.length?Math.round(avg(a)):null;});
+  destroy('S');charts.S=new Chart(document.getElementById('chS'),{type:'line',
+    data:{labels:['Sem 1','Sem 2','Sem 3'],datasets:[
+      {label:'Ansiedad social',data:ln('ansiedad_social'),borderColor:'#C55A11',backgroundColor:'#C55A11',tension:.35,spanGaps:true},
+      {label:'Red de apoyo',data:ln('red_apoyo'),borderColor:'#3f9e5a',backgroundColor:'#3f9e5a',tension:.35,spanGaps:true,borderDash:[6,4]}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{min:0,max:100}}}});
+}
+
+let SES_CACHE=[];
+async function vSesiones(v){
+  SES_CACHE=await api('obs_sesiones?select=*&order=created_at.desc&limit=2000');
+  v.innerHTML=`
+    <div class="toolbar">
+      <select id="fB"><option value="">Todas las edades</option>${['6-7','8-9','10-11','12-13','14'].map(b=>`<option>${b}</option>`).join('')}</select>
+      <select id="fC"><option value="">Todos los cortes</option><option value="inicio">Inicio</option><option value="medio">Medio</option><option value="cierre">Cierre</option></select>
+      <input id="fQ" placeholder="Buscar código…" style="min-width:150px">
+      <button class="btn-sm acc" onclick="exportCSV()">⬇ CSV</button>
+      <span class="tag" id="cnt"></span>
+    </div>
+    <div class="card" style="overflow-x:auto"><table id="t"><thead><tr>
+      <th>Fecha</th><th>Código</th><th>Edad</th><th>Banda</th><th>Corte</th><th>Actividad</th>
+      <th>A. social</th><th>Nivel</th><th>Red apoyo</th></tr></thead><tbody></tbody></table>
+      <div class="empty hidden" id="noRows"><b>Sin sesiones con estos filtros.</b></div></div>`;
+  ['fB','fC','fQ'].forEach(id=>document.getElementById(id).addEventListener('input',renderSes));
+  renderSes();
+}
+function filtSes(){
+  const b=document.getElementById('fB').value,c=document.getElementById('fC').value,q=(document.getElementById('fQ').value||'').toUpperCase();
+  return SES_CACHE.filter(r=>(!b||bandOf(r)===b)&&(!c||(r.modo||'').toLowerCase()===c)&&(!q||(r.nino_codigo||'').toUpperCase().includes(q)));
+}
+const nivelColor=n=>({'mínimo':'#3f9e5a','leve':'#9bbf3f','moderado':'#E9B10A','marcado':'#d9534f'}[n]||'#6b7a8d');
+function renderSes(){
+  const rows=filtSes(),tb=document.querySelector('#t tbody');
+  document.getElementById('cnt').textContent=rows.length+' sesiones';
+  document.getElementById('noRows').classList.toggle('hidden',rows.length>0);
+  tb.innerHTML=rows.map(r=>`<tr>
+    <td>${esc(fmtDate(r.created_at))}</td><td class="num">${esc(r.nino_codigo)}</td><td class="num">${esc(r.edad??'—')}</td>
+    <td>${esc(bandOf(r))}</td><td>${esc(r.modo||'—')}</td><td>${esc((r.respuestas&&r.respuestas.actividad)||'—')}</td>
+    <td class="num">${esc(r.ansiedad_social??'—')}</td>
+    <td><span class="pill" style="background:${nivelColor(r.nivel_global)}">${esc(r.nivel_global||'—')}</span></td>
+    <td class="num">${esc(r.red_apoyo??'—')}</td></tr>`).join('');
+}
+function exportCSV(){
+  const rows=filtSes();if(!rows.length){alert('Sin datos');return;}
+  const head=['fecha','codigo','nombre','edad','banda','semana','corte','actividad','ansiedad_social','ansiedad_general','dependencia','inatencion','red_apoyo','nivel','observador','notas'];
+  const q=v=>{v=(v==null?'':String(v)).replace(/"/g,'""');return /[",\n]/.test(v)?`"${v}"`:v;};
+  const lines=[head.join(',')].concat(rows.map(r=>[r.created_at,r.nino_codigo,r.nino_nombre,r.edad,bandOf(r),r.semana,r.modo,(r.respuestas&&r.respuestas.actividad)||'',r.ansiedad_social,r.ansiedad_general,r.dependencia,r.inatencion,r.red_apoyo,r.nivel_global,r.observador,r.notas].map(q).join(',')));
+  const blob=new Blob(["﻿"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sesiones_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+async function vParticipantes(v){
+  const p=await api('patients?select=folio,full_name,preferred_name,birth_date,status,created_at&order=folio',{schema:'clinico'});
+  v.innerHTML=`<div class="disc">Alta y edición de expedientes llegan en la Fase 3. Aquí ves el catálogo actual (lectura).</div>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Folio</th><th>Nombre</th><th>Preferido</th><th>Nacimiento</th><th>Estatus</th></tr></thead>
+    <tbody>${p.length?p.map(x=>`<tr><td class="num">${esc(x.folio)}</td><td>${esc(x.full_name)}</td><td>${esc(x.preferred_name||'—')}</td><td>${esc(x.birth_date||'—')}</td><td><span class="tag">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="5" class="empty"><b>Sin participantes registrados.</b> Se poblará al migrar/capturar.</td></tr>'}</tbody></table></div>`;
+}
+async function vInstrumentos(v){
+  const [ins,ver]=await Promise.all([
+    api('instruments?select=code,name,status,author_source,requires_consent&order=code',{schema:'clinico'}),
+    api('instrument_versions?select=version,age_min,age_max,target_population,instrument_id&order=version',{schema:'clinico'})
+  ]);
+  v.innerHTML=`<div class="card" style="overflow-x:auto"><h3>Catálogo de instrumentos</h3><p class="s">Versionados; los resultados conservan la versión exacta aplicada.</p>
+    <table><thead><tr><th>Código</th><th>Nombre</th><th>Estado</th><th>Consent.</th><th>Fuente</th></tr></thead>
+    <tbody>${ins.map(x=>`<tr><td class="num">${esc(x.code)}</td><td>${esc(x.name)}</td><td><span class="tag">${esc(x.status)}</span></td><td>${x.requires_consent?'Sí':'No'}</td><td style="font-size:.78rem;color:var(--muted)">${esc((x.author_source||'').slice(0,80))}</td></tr>`).join('')}</tbody></table></div>
+    <div class="card" style="margin-top:14px"><h3>Versiones</h3>
+    <table><thead><tr><th>Versión</th><th>Edad</th><th>Población</th></tr></thead>
+    <tbody>${ver.map(x=>`<tr><td class="num">${esc(x.version)}</td><td>${esc(x.age_min)}–${esc(x.age_max)}</td><td>${esc(x.target_population||'—')}</td></tr>`).join('')}</tbody></table></div>`;
+}
+async function vUsuarios(v){
+  const [prof,roles]=await Promise.all([
+    api('profiles?select=id,full_name,email&order=full_name',{schema:'clinico'}),
+    api('user_roles?select=profile_id,role',{schema:'clinico'})
+  ]);
+  const byP={};roles.forEach(r=>(byP[r.profile_id]=byP[r.profile_id]||[]).push(r.role));
+  const cols={admin:'#C55A11',supervisor:'#159a9c',clinico:'#2E5496',facilitador:'#3f9e5a',capturista:'#7c4dbd'};
+  v.innerHTML=`<div class="disc">Alta de usuarios y asignación de roles: Fase 3 (aquí, lectura del directorio de tu organización).</div>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Roles</th></tr></thead>
+    <tbody>${prof.map(p=>`<tr><td>${esc(p.full_name)}</td><td>${esc(p.email||'—')}</td><td>${(byP[p.id]||[]).map(r=>`<span class="rolechip" style="background:${cols[r]||'#6b7a8d'}">${esc(r)}</span>`).join('')||'—'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+async function vAuditoria(v){
+  const a=await api('audit_logs?select=at,action,entity,entity_id,actor&order=at.desc&limit=300',{schema:'clinico'});
+  const accColor={INSERT:'#3f9e5a',UPDATE:'#E9B10A',DELETE:'#d9534f'};
+  v.innerHTML=`<div class="card" style="overflow-x:auto"><h3>Registro de auditoría</h3><p class="s">Últimos 300 eventos sobre datos clínicos (solo lectura, solo admin).</p>
+    <table><thead><tr><th>Fecha</th><th>Acción</th><th>Entidad</th><th>Registro</th></tr></thead>
+    <tbody>${a.length?a.map(x=>`<tr><td>${esc(fmtDate(x.at))}</td><td><span class="pill" style="background:${accColor[x.action]||'#6b7a8d'}">${esc(x.action)}</span></td><td>${esc(x.entity)}</td><td style="font-size:.72rem;color:var(--muted)">${esc((x.entity_id||'').slice(0,8))}</td></tr>`).join(''):'<tr><td colspan="4" class="empty"><b>Sin eventos.</b></td></tr>'}</tbody></table></div>`;
+}
+</script>
+</body>
+</html>
