@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3864">
+<title>Dashboard · Ansiedad social · Curso de verano</title>
+<script src="chart.umd.js"></script>
+<style>
+  :root{--navy:#1F3864;--blue:#2E5496;--sky:#4a90d9;--light:#EAF0F8;--accent:#C55A11;--green:#3f9e5a;
+    --purple:#7c4dbd;--red:#d9534f;--teal:#159a9c;--gold:#E9B10A;
+    --ink:#22303f;--muted:#6b7a8d;--bg:#f4f7fc;--card:#ffffff;--shadow:0 8px 24px rgba(31,56,100,.10);
+    --line:#dfe7f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1080px;margin:0 auto;padding:18px 16px 40px}
+  header.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .brand h1{font-size:1.25rem;margin:0;color:var(--navy)}
+  .brand p{margin:2px 0 0;font-size:.8rem;color:var(--muted)}
+  .badge{background:var(--light);color:var(--navy);font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:20px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px;align-items:center}
+  .toolbar select,.toolbar button{padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;
+    font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer}
+  .toolbar select:focus{outline:2px solid var(--sky)}
+  .btn-acc{background:var(--blue)!important;color:#fff!important;border-color:var(--blue)!important}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:12px 0}
+  .kpi{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:14px 16px;border-top:4px solid var(--blue)}
+  .kpi .v{font-size:1.7rem;font-weight:800;color:var(--navy);line-height:1.1}
+  .kpi .l{font-size:.74rem;font-weight:700;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+  .kpi.foco{border-top-color:var(--accent)}
+  .kpi.ok{border-top-color:var(--green)}
+  .kpi.warn{border-top-color:var(--red)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:840px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+  .card h2{font-size:.95rem;margin:0 0 2px;color:var(--navy)}
+  .card .sub{font-size:.75rem;color:var(--muted);margin:0 0 10px}
+  .chartbox{position:relative;height:260px}
+  .full{grid-column:1/-1}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;
+    border-bottom:2px solid var(--line);padding:8px 8px}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:hover td{background:#f7faff}
+  .pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.72rem;font-weight:800;color:#fff}
+  .num{font-variant-numeric:tabular-nums;font-weight:700}
+  .spark{height:26px;display:flex;align-items:flex-end;gap:2px}
+  .spark i{display:block;width:7px;border-radius:2px 2px 0 0;min-height:3px}
+  .empty{padding:40px 20px;text-align:center;color:var(--muted)}
+  .empty b{color:var(--navy)}
+  .footnote{font-size:.72rem;color:var(--muted);background:rgba(233,177,10,.10);border:1px solid rgba(233,177,10,.35);
+    border-radius:12px;padding:10px 12px;margin-top:16px;line-height:1.5}
+  .err{background:#fdecea;border:1px solid #f5c6c0;color:#8a2a22;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:.85rem;display:none}
+  .loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-weight:700;padding:30px;justify-content:center}
+  .dot-l{width:10px;height:10px;border-radius:50%;background:var(--blue);animation:b 1s infinite alternate}
+  @keyframes b{to{transform:translateY(-6px);opacity:.4}}
+  a.applink{color:var(--blue);font-weight:700;font-size:.8rem;text-decoration:none}
+  .switch{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="gate" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div class="card" style="max-width:380px;width:100%">
+    <h2 style="margin-top:0">Acceso al dashboard</h2>
+    <p class="sub" style="margin-bottom:12px">Los datos del estudio están protegidos. Escribe la clave de acceso del equipo.</p>
+    <input id="clave" type="password" placeholder="Clave de acceso" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:1rem;font-family:inherit" autocomplete="current-password">
+    <div id="gateErr" style="color:var(--red);font-size:.8rem;font-weight:700;margin-top:8px;display:none">Clave incorrecta.</div>
+    <button class="btn-acc" style="width:100%;margin-top:12px;padding:12px;border:none;border-radius:10px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer" onclick="entrarGate()">Entrar</button>
+  </div>
+</div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Dashboard · Ansiedad social en el curso de verano</h1>
+      <p>Deportivo SNTSS · Sección VI Yucatán · Piloto de observación (no diagnóstico)</p>
+    </div>
+    <span class="badge" id="updated">Cargando…</span>
+  </header>
+
+  <div class="toolbar">
+    <select id="fBanda"><option value="">Todas las edades</option>
+      <option value="6-7">6–7</option><option value="8-9">8–9</option><option value="10-11">10–11</option>
+      <option value="12-13">12–13</option><option value="14">14</option></select>
+    <select id="fSemana"><option value="">Todas las semanas</option>
+      <option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option></select>
+    <select id="fCorte"><option value="">Todos los cortes</option>
+      <option value="inicio">Inicio</option><option value="medio">Medio</option><option value="cierre">Cierre</option></select>
+    <select id="fNino"><option value="">Todos los participantes</option></select>
+    <label class="switch"><input type="checkbox" id="anon" checked> Ocultar nombres</label>
+    <button class="btn-acc" onclick="loadData()">↻ Actualizar</button>
+    <button onclick="exportCSV()">⬇ CSV</button>
+    <a class="applink" href="index.html">Ir al instrumento →</a>
+  </div>
+
+  <div class="err" id="err"></div>
+  <div class="loading" id="loading"><span class="dot-l"></span> Leyendo la base de datos…</div>
+
+  <div id="content" style="display:none">
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="kSes">–</div><div class="l">Sesiones</div></div>
+      <div class="kpi"><div class="v" id="kNinos">–</div><div class="l">Participantes</div></div>
+      <div class="kpi foco"><div class="v" id="kSocial">–</div><div class="l">Ansiedad social prom.</div></div>
+      <div class="kpi warn"><div class="v" id="kAlerta">–</div><div class="l">Moderado / marcado</div></div>
+      <div class="kpi ok"><div class="v" id="kApoyo">–</div><div class="l">Red de apoyo prom.</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Ansiedad social por grupo de edad</h2>
+        <p class="sub">Pregunta del estudio: ¿cómo varía entre grupos? (promedio, 0–100)</p>
+        <div class="chartbox"><canvas id="chBanda"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Perfil de índices</h2>
+        <p class="sub">Promedio de los 5 índices con los filtros activos</p>
+        <div class="chartbox"><canvas id="chPerfil"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Evolución por corte</h2>
+        <p class="sub">Ansiedad social en Inicio → Medio → Cierre</p>
+        <div class="chartbox"><canvas id="chCorte"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Evolución por semana</h2>
+        <p class="sub">Ansiedad social y red de apoyo, semanas 1–3</p>
+        <div class="chartbox"><canvas id="chSemana"></canvas></div>
+      </div>
+      <div class="card full">
+        <h2>Participantes</h2>
+        <p class="sub">Última valoración, tendencia de ansiedad social entre sesiones y nivel actual</p>
+        <div style="overflow-x:auto"><table id="tbl">
+          <thead><tr><th>Código</th><th>Nombre</th><th>Edad</th><th>Sesiones</th>
+            <th>A. social</th><th>Tendencia</th><th>Nivel</th><th>Red apoyo</th><th>Última actividad</th></tr></thead>
+          <tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <p class="footnote"><b>Nota metodológica:</b> índices observacionales 0–100 derivados de la escala tipo SCAS (fobia social),
+    caras pictóricas y registro observacional del facilitador. Sirven para orientar el acompañamiento y el expediente;
+    <b>no constituyen diagnóstico</b> y su interpretación se hace por grupo de edad con validación profesional.</p>
+  </div>
+
+  <div class="empty" id="empty" style="display:none">
+    <p><b>Aún no hay sesiones con estos filtros.</b><br>Aplica el instrumento desde el teléfono y presiona “Actualizar”.</p>
+  </div>
+</div>
+
+<script>
+const SB_URL="https://sclqzavebwinezpivmwr.supabase.co";
+const DATA_FN=SB_URL+"/functions/v1/datos"; // lectura protegida por clave (la tabla ya NO es legible públicamente)
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const BANDAS=["6-7","8-9","10-11","12-13","14"];
+const C={navy:'#1F3864',blue:'#2E5496',sky:'#4a90d9',accent:'#C55A11',green:'#3f9e5a',purple:'#7c4dbd',red:'#d9534f',gold:'#E9B10A',teal:'#159a9c',grid:'#e4ebf5',muted:'#6b7a8d'};
+let ROWS=[],charts={};
+
+Chart.defaults.font.family='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif';
+Chart.defaults.color=C.muted;
+Chart.defaults.borderColor=C.grid;
+
+const bandOf=r=>{
+  const b=(r.respuestas&&r.respuestas.banda)||(r.juegos||'').split(':')[0];
+  if(BANDAS.includes(b))return b;
+  const e=r.edad||0;return e<=7?'6-7':e<=9?'8-9':e<=11?'10-11':e<=13?'12-13':'14';
+};
+const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:null;
+const R=v=>v==null?null:Math.round(v);
+const nivelColor=n=>({'mínimo':C.green,'leve':'#9bbf3f','moderado':C.gold,'marcado':C.red}[n]||C.muted);
+
+function entrarGate(){
+  const v=document.getElementById('clave').value.trim();
+  if(!v)return;
+  sessionStorage.setItem('obs_clave',v);
+  document.getElementById('gateErr').style.display='none';
+  loadData();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('gate').style.display!=='none')entrarGate();});
+async function loadData(){
+  const clave=sessionStorage.getItem('obs_clave');
+  if(!clave){document.getElementById('gate').style.display='flex';return;}
+  document.getElementById('loading').style.display='flex';
+  document.getElementById('err').style.display='none';
+  try{
+    const res=await fetch(DATA_FN,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({clave})});
+    if(res.status===401){sessionStorage.removeItem('obs_clave');
+      document.getElementById('gate').style.display='flex';
+      document.getElementById('gateErr').style.display='block';
+      document.getElementById('loading').style.display='none';return;}
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    ROWS=await res.json();
+    document.getElementById('gate').style.display='none';
+    document.getElementById('updated').textContent='Actualizado · '+new Date().toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'});
+    fillNinoFilter();
+    render();
+  }catch(e){
+    const el=document.getElementById('err');
+    el.textContent='No se pudo leer la base: '+e.message+' — revisa tu conexión y presiona Actualizar.';
+    el.style.display='block';
+  }finally{document.getElementById('loading').style.display='none';}
+}
+function fillNinoFilter(){
+  const sel=document.getElementById('fNino'),cur=sel.value;
+  const seen={};ROWS.forEach(r=>{if(r.nino_codigo)seen[r.nino_codigo]=r.nino_nombre||r.nino_codigo;});
+  sel.innerHTML='<option value="">Todos los participantes</option>'+
+    Object.keys(seen).sort().map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  sel.value=cur;
+}
+function filtered(){
+  const b=document.getElementById('fBanda').value,s=document.getElementById('fSemana').value,
+        c=document.getElementById('fCorte').value,n=document.getElementById('fNino').value;
+  return ROWS.filter(r=>(!b||bandOf(r)===b)&&(!s||String(r.semana)===s)&&(!c||(r.modo||'').toLowerCase()===c)&&(!n||r.nino_codigo===n));
+}
+function destroy(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function render(){
+  const rows=filtered();
+  const has=rows.length>0;
+  document.getElementById('content').style.display=has?'block':'none';
+  document.getElementById('empty').style.display=has?'none':'block';
+  if(!has)return;
+  const anon=document.getElementById('anon').checked;
+
+  // KPIs
+  const ninos=[...new Set(rows.map(r=>r.nino_codigo))];
+  const socVals=rows.map(r=>+r.ansiedad_social).filter(v=>!isNaN(v));
+  const apVals=rows.map(r=>+r.red_apoyo).filter(v=>!isNaN(v));
+  const alerta=rows.filter(r=>['moderado','marcado'].includes(r.nivel_global)).length;
+  document.getElementById('kSes').textContent=rows.length;
+  document.getElementById('kNinos').textContent=ninos.length;
+  document.getElementById('kSocial').textContent=socVals.length?R(avg(socVals)):'—';
+  document.getElementById('kAlerta').textContent=rows.length?Math.round(alerta/rows.length*100)+'%':'—';
+  document.getElementById('kApoyo').textContent=apVals.length?R(avg(apVals)):'—';
+
+  // Chart: por banda
+  destroy('banda');
+  const byBand=BANDAS.map(b=>{
+    const v=rows.filter(r=>bandOf(r)===b).map(r=>+r.ansiedad_social).filter(x=>!isNaN(x));
+    return {b,n:v.length,m:avg(v)};
+  });
+  charts.banda=new Chart(document.getElementById('chBanda'),{type:'bar',
+    data:{labels:byBand.map(x=>x.b+(x.n?` (n=${x.n})`:'')),
+      datasets:[{data:byBand.map(x=>x.m==null?null:R(x.m)),
+        backgroundColor:byBand.map(x=>x.m==null?'#e4ebf5':(x.m<25?C.green:x.m<45?'#9bbf3f':x.m<65?C.gold:C.red)),
+        borderRadius:8,maxBarThickness:56}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>' Promedio: '+(ctx.raw==null?'sin datos':ctx.raw)}}},
+      scales:{y:{min:0,max:100,ticks:{stepSize:25}},x:{grid:{display:false}}}}});
+
+  // Chart: perfil 5 índices
+  destroy('perfil');
+  const idx=[['ansiedad_social','A. social',C.accent],['ansiedad_general','A. general',C.blue],
+    ['dependencia','Dependencia',C.purple],['inatencion','Inatención',C.gold],['red_apoyo','Red apoyo',C.green]];
+  charts.perfil=new Chart(document.getElementById('chPerfil'),{type:'bar',
+    data:{labels:idx.map(i=>i[1]),
+      datasets:[{data:idx.map(i=>{const v=rows.map(r=>+r[i[0]]).filter(x=>!isNaN(x));return v.length?R(avg(v)):null;}),
+        backgroundColor:idx.map(i=>i[2]),borderRadius:8,maxBarThickness:52}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{stepSize:25}},y:{grid:{display:false}}}}});
+
+  // Chart: por corte
+  destroy('corte');
+  const cortes=['inicio','medio','cierre'];
+  charts.corte=new Chart(document.getElementById('chCorte'),{type:'line',
+    data:{labels:['Inicio','Medio','Cierre'],
+      datasets:[{label:'Ansiedad social',data:cortes.map(c=>{const v=rows.filter(r=>(r.modo||'').toLowerCase()===c).map(r=>+r.ansiedad_social).filter(x=>!isNaN(x));return v.length?R(avg(v)):null;}),
+        borderColor:C.accent,backgroundColor:C.accent,tension:.35,spanGaps:true,pointRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{min:0,max:100,ticks:{stepSize:25}},x:{grid:{display:false}}}}});
+
+  // Chart: por semana
+  destroy('semana');
+  const sems=[1,2,3];
+  const line=(key)=>sems.map(s=>{const v=rows.filter(r=>+r.semana===s).map(r=>+r[key]).filter(x=>!isNaN(x));return v.length?R(avg(v)):null;});
+  charts.semana=new Chart(document.getElementById('chSemana'),{type:'line',
+    data:{labels:['Sem 1','Sem 2','Sem 3'],datasets:[
+      {label:'Ansiedad social',data:line('ansiedad_social'),borderColor:C.accent,backgroundColor:C.accent,tension:.35,spanGaps:true,pointRadius:5},
+      {label:'Red de apoyo',data:line('red_apoyo'),borderColor:C.green,backgroundColor:C.green,tension:.35,spanGaps:true,pointRadius:5,borderDash:[6,4]}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{y:{min:0,max:100,ticks:{stepSize:25}},x:{grid:{display:false}}}}});
+
+  // Tabla participantes
+  const tb=document.querySelector('#tbl tbody');tb.innerHTML='';
+  const byNino={};
+  rows.forEach(r=>{(byNino[r.nino_codigo]=byNino[r.nino_codigo]||[]).push(r);});
+  Object.keys(byNino).sort().forEach(cod=>{
+    const rs=byNino[cod].slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const last=rs[rs.length-1];
+    const socSeries=rs.map(r=>+r.ansiedad_social).filter(v=>!isNaN(v));
+    const first=socSeries[0],lastV=socSeries[socSeries.length-1];
+    let tend='—',tCol=C.muted;
+    if(socSeries.length>=2){ if(lastV<first){tend='▼ mejora';tCol=C.green;} else if(lastV>first){tend='▲ sube';tCol=C.red;} else {tend='= igual';} }
+    const spark=socSeries.slice(-8).map(v=>`<i style="height:${Math.max(8,v*0.26)}px;background:${v<25?C.green:v<45?'#9bbf3f':v<65?C.gold:C.red}"></i>`).join('');
+    const nombre=anon?'·····':esc(last.nino_nombre||'—');
+    tb.insertAdjacentHTML('beforeend',`<tr>
+      <td class="num">${esc(cod)}</td><td>${nombre}</td><td class="num">${esc(last.edad??'—')}</td>
+      <td class="num">${rs.length}</td>
+      <td><div class="spark">${spark||'—'}</div></td>
+      <td style="color:${tCol};font-weight:800">${tend}</td>
+      <td><span class="pill" style="background:${nivelColor(last.nivel_global)}">${esc(last.nivel_global||'—')}</span></td>
+      <td class="num">${esc(last.red_apoyo??'—')}</td>
+      <td>${esc((last.respuestas&&last.respuestas.actividad)||'—')}</td></tr>`);
+  });
+}
+
+function exportCSV(){
+  const rows=filtered();
+  if(!rows.length){alert('No hay datos con estos filtros.');return;}
+  const head=['fecha','codigo','nombre','edad','banda','semana','corte','actividad','ansiedad_social','ansiedad_general','dependencia','inatencion','red_apoyo','nivel','observador','notas'];
+  const esc=v=>{v=(v==null?'':String(v)).replace(/"/g,'""');return /[",\n]/.test(v)?`"${v}"`:v;};
+  const lines=[head.join(',')].concat(rows.map(r=>[
+    r.created_at,r.nino_codigo,r.nino_nombre,r.edad,bandOf(r),r.semana,r.modo,
+    (r.respuestas&&r.respuestas.actividad)||'',r.ansiedad_social,r.ansiedad_general,r.dependencia,
+    r.inatencion,r.red_apoyo,r.nivel_global,r.observador,r.notas].map(esc).join(',')));
+  const blob=new Blob(["﻿"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='reporte_ansiedad_social_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+['fBanda','fSemana','fCorte','fNino','anon'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+loadData();
+</script>
+</body>
+</html>
