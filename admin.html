@@ -95,6 +95,33 @@
   .draft{background:rgba(233,177,10,.15);border:1px solid rgba(233,177,10,.5);border-radius:8px;padding:2px 8px;font-size:.7rem;font-weight:800;color:#8a6d1f}
   .savebar{position:sticky;bottom:0;background:linear-gradient(0deg,#fff,#fff 70%,transparent);padding:12px 0;display:flex;gap:10px;align-items:center}
   .savehint{font-size:.75rem;color:var(--muted)}
+  .ralert{background:rgba(214,64,64,.1);border:1px solid rgba(214,64,64,.45);border-radius:10px;padding:12px 14px;font-size:.86rem;color:#8a2b2b;font-weight:600;margin-bottom:12px}
+  .rchip{display:inline-block;border-radius:8px;padding:3px 9px;font-size:.76rem;font-weight:700;border:1px solid #d7dee6;background:#f3f6f9;color:var(--navy)}
+  .rchip.lv-bajo{background:rgba(63,158,90,.12);border-color:rgba(63,158,90,.4);color:#2c6e3f}
+  .rchip.lv-moderado{background:rgba(233,177,10,.15);border-color:rgba(233,177,10,.5);color:#8a6d1f}
+  .rchip.lv-alto{background:rgba(214,64,64,.14);border-color:rgba(214,64,64,.5);color:#8a2b2b}
+  /* ---- Reporte imprimible ---- */
+  .rep-doc{background:#fff;border:1px solid #e3e9ef;border-radius:12px;padding:26px;margin-top:12px;color:#1c2733;font-size:.86rem;line-height:1.5}
+  .rep-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--navy);padding-bottom:10px;gap:12px}
+  .rep-org{font-weight:800;color:var(--navy);font-size:1rem}
+  .rep-sub{color:var(--muted);font-size:.82rem}
+  .rep-meta{text-align:right;font-size:.8rem;color:var(--muted)}
+  .rep-disc{background:#f6f9fc;border:1px solid #dbe4ec;border-radius:8px;padding:10px 12px;font-size:.78rem;color:#41505f;margin:12px 0}
+  .rep-h2{color:var(--navy);font-size:1rem;border-bottom:1px solid #e3e9ef;padding-bottom:4px;margin:20px 0 8px}
+  .rep-tbl{width:100%;border-collapse:collapse}
+  .rep-tbl th{text-align:left;vertical-align:top;width:34%;padding:6px 8px;background:#f6f9fc;border:1px solid #e3e9ef;font-weight:700;color:var(--navy)}
+  .rep-tbl td{padding:6px 8px;border:1px solid #e3e9ef;white-space:pre-wrap}
+  .rep-enc{border:1px solid #e3e9ef;border-radius:8px;padding:10px 12px;margin-top:8px}
+  .rep-obj{color:var(--muted);font-size:.8rem}
+  .rep-add{margin-top:6px;padding:7px 9px;border-left:3px solid var(--gold,#e9b10a);background:#fffdf5;font-size:.8rem}
+  .rep-empty,.rep-note{color:var(--muted);font-size:.82rem;font-style:italic}
+  .rep-foot{margin-top:22px;border-top:1px solid #e3e9ef;padding-top:8px;color:var(--muted);font-size:.72rem}
+  @media print{
+    body.printing *{visibility:hidden!important}
+    body.printing #repDoc,body.printing #repDoc *{visibility:visible!important}
+    body.printing #repDoc{position:absolute;left:0;top:0;width:100%;border:none;margin:0;padding:0}
+    body.printing .rep-enc,body.printing .rep-tbl tr{page-break-inside:avoid}
+  }
 </style>
 </head>
 <body>
@@ -400,12 +427,14 @@ async function abrirFicha(folio){
       <button class="on" data-t="datos">Datos</button>
       <button data-t="historia">Historia clínica</button>
       <button data-t="consultas">Consultas y notas</button>
+      <button data-t="riesgos">Riesgos</button>
+      <button data-t="reporte">Reporte / PDF</button>
     </div><div id="fbody"></div>`;
   v.querySelectorAll('#ftabs button').forEach(b=>b.onclick=()=>{v.querySelectorAll('#ftabs button').forEach(x=>x.classList.toggle('on',x===b));fichaTab(b.dataset.t,pac);});
   fichaTab('datos',pac);
 }
 function fichaTab(t,pac){const el=document.getElementById('fbody');el.innerHTML='<div class="load"><span class="dl"></span> Cargando…</div>';
-  ({datos:tabDatos,historia:tabHistoria,consultas:tabConsultas}[t])(el,pac).catch(e=>el.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`);}
+  ({datos:tabDatos,historia:tabHistoria,consultas:tabConsultas,riesgos:tabRiesgos,reporte:tabReporte}[t])(el,pac).catch(e=>el.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`);}
 async function tabDatos(el,pac){
   const g=await api('patient_guardians?patient_id=eq.'+pac.id+'&select=full_name,relationship,phone',{schema:'clinico'});
   const rows=[['Folio',pac.folio],['Nombre',pac.full_name],['Preferido',pac.preferred_name],['Nacimiento',pac.birth_date],['Edad',edad(pac.birth_date)],['Sexo',pac.sex],['Teléfono',pac.phone],['Escuela/ocupación',pac.school_or_occupation],['Estatus',pac.status]];
@@ -505,6 +534,127 @@ async function guardarAdenda(noteId){
   const btn=document.getElementById('a_save');btn.disabled=true;btn.textContent='Guardando…';
   try{await rpc('nota_adenda',{note_id:noteId,reason:val('a_reason'),content:val('a_content')});cerrarModal();fichaTab('consultas',CUR_PAC);}
   catch(e){btn.disabled=false;btn.textContent='Guardar adenda';alert('Error: '+e.message);}
+}
+
+/* ---- Módulo de riesgos (valoración operativa, sin conclusiones automáticas) ---- */
+const RDOMS=[['suicida','Ideación / conducta suicida'],['autolesion','Autolesión no suicida'],['heteroagresion','Agresión hacia terceros'],['abuso','Indicadores de abuso o maltrato al menor'],['negligencia','Negligencia / desprotección'],['otros','Otros riesgos relevantes']];
+const RNIV=['sin_dato','bajo','moderado','alto'];
+const NIVLBL={sin_dato:'Sin dato',bajo:'Bajo',moderado:'Moderado',alto:'Alto'};
+async function tabRiesgos(el,pac){
+  if(!ROLES.some(r=>['admin','clinico'].includes(r))){el.innerHTML='<div class="disc">Solo personal clínico puede ver o registrar valoraciones de riesgo.</div>';return;}
+  let prev=[];
+  try{prev=await api('rpc/riesgos_de',{method:'POST',body:{pid:pac.id}});}catch(e){}
+  const hayAlto=(d)=>d&&Object.values(d).some(x=>x&&x.nivel==='alto');
+  const ultAlta=prev.some(r=>hayAlto(r.domains));
+  el.innerHTML=`
+    <div class="disc">Esta valoración es una <b>herramienta operativa de acompañamiento</b>. No genera diagnósticos ni conclusiones clínicas automáticas: el nivel de riesgo lo determina el profesional y toda decisión final le corresponde. Ante un riesgo grave, active el protocolo institucional y los servicios de emergencia.</div>
+    ${ultAlta?`<div class="ralert">⚠ Alerta operativa: existe al menos una valoración con un dominio en nivel <b>ALTO</b>. Verifique que se haya activado el protocolo institucional y notificado al profesional responsable. <span class="savehint">Aviso operativo · no constituye diagnóstico.</span></div>`:''}
+    <div class="card"><button class="btn-sm acc" onclick="formRiesgo('${pac.id}')">＋ Nueva valoración de riesgo</button></div>
+    ${prev.length?prev.map(renderRiesgo).join(''):'<div class="empty">Sin valoraciones de riesgo registradas.</div>'}`;
+}
+function renderRiesgo(r){
+  const d=r.domains||{};
+  const chips=RDOMS.map(([k,lbl])=>{const v=d[k];if(!v||!v.nivel||v.nivel==='sin_dato')return '';
+    return `<span class="rchip lv-${esc(v.nivel)}">${esc(lbl)}: <b>${esc(NIVLBL[v.nivel]||v.nivel)}</b></span>`;}).filter(Boolean).join('');
+  const notas=RDOMS.map(([k,lbl])=>{const v=d[k];return v&&v.nota?`<div style="font-size:.82rem;margin-top:3px"><b>${esc(lbl)}:</b> ${esc(v.nota)}</div>`:'';}).filter(Boolean).join('');
+  const alto=Object.values(d).some(x=>x&&x.nivel==='alto');
+  return `<div class="card" style="${alto?'border-left:4px solid var(--red)':''}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <b>${esc(fmtDate(r.created_at))}</b>${r.emergency_contacted?'<span class="signed">Emergencia contactada</span>':''}</div>
+    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${chips||'<span class="savehint">Sin dominios marcados</span>'}</div>
+    ${notas}
+    ${r.protective_factors?`<div class="savehint" style="margin-top:8px"><b>Factores protectores:</b> ${esc(r.protective_factors)}</div>`:''}
+    ${r.actions_taken?`<div class="savehint"><b>Acciones tomadas:</b> ${esc(r.actions_taken)}</div>`:''}
+    ${r.referral?`<div class="savehint"><b>Derivación:</b> ${esc(r.referral)}</div>`:''}
+    ${r.follow_up?`<div class="savehint"><b>Seguimiento:</b> ${esc(r.follow_up)}</div>`:''}</div>`;
+}
+function formRiesgo(pid){
+  modal(`<h3>Nueva valoración de riesgo</h3>
+   <p class="savehint">Registre lo observado por dominio. El nivel es un apoyo operativo; la valoración clínica corresponde al profesional. <b>No es un diagnóstico.</b></p>
+   ${RDOMS.map(([k,lbl])=>`<div class="fld"><label>${lbl}</label>
+     <select id="rd_${k}">${RNIV.map(n=>`<option value="${n}">${NIVLBL[n]}</option>`).join('')}</select>
+     <input id="rn_${k}" placeholder="Observación (opcional)" style="margin-top:6px"></div>`).join('')}
+   <div class="fld"><label>Factores protectores</label><textarea id="r_prot"></textarea></div>
+   <div class="fld"><label>Acciones tomadas</label><textarea id="r_acc"></textarea></div>
+   <div class="fld"><label>Derivación</label><input id="r_ref"></div>
+   <div class="fld"><label>Plan de seguimiento</label><input id="r_fu"></div>
+   <label class="noeval" style="margin-top:8px"><input type="checkbox" id="r_emg"> Se contactó a servicios de emergencia / contacto de emergencia</label>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="r_save" onclick="guardarRiesgo('${pid}')">Guardar valoración</button></div>`);
+}
+async function guardarRiesgo(pid){
+  const domains={};RDOMS.forEach(([k])=>{const nivel=document.getElementById('rd_'+k).value,nota=val('rn_'+k);
+    if(nivel!=='sin_dato'||nota)domains[k]={nivel,nota};});
+  const b={patient_id:pid,domains,protective_factors:val('r_prot'),actions_taken:val('r_acc'),referral:val('r_ref'),follow_up:val('r_fu'),emergency_contacted:document.getElementById('r_emg').checked};
+  const btn=document.getElementById('r_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('riesgo_guardar',b);
+    if(Object.values(domains).some(x=>x.nivel==='alto'))alert('Valoración guardada.\n\nAviso operativo: registró al menos un dominio en nivel ALTO. Active el protocolo institucional y notifique al profesional responsable. Este aviso es operativo y no constituye un diagnóstico.');
+    cerrarModal();fichaTab('riesgos',CUR_PAC);}
+  catch(e){btn.disabled=false;btn.textContent='Guardar valoración';alert('Error: '+e.message);}
+}
+
+/* ---- Reportes PDF (vista previa + selección de secciones) ---- */
+const RSECS=[['datos','Resumen del expediente'],['historia','Historia clínica'],['consultas','Consultas y notas'],['riesgos','Valoraciones de riesgo']];
+async function tabReporte(el,pac){
+  const clin=ROLES.some(r=>['admin','clinico'].includes(r));
+  el.innerHTML=`<div class="card">
+    <div class="savehint">Seleccione qué secciones incluir. La vista previa se genera con los datos guardados; use <b>Guardar como PDF</b> (imprimir → destino PDF).</div>
+    <div style="margin:12px 0;display:flex;flex-wrap:wrap;gap:14px">
+      ${RSECS.map(([k,lbl])=>`<label class="noeval"><input type="checkbox" class="rsec" value="${k}" ${k==='datos'?'checked':''} ${(k!=='datos'&&!clin)?'disabled':''}> ${lbl}${(k!=='datos'&&!clin)?' <span class="savehint">(solo clínico)</span>':''}</label>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px"><button class="btn-sm acc" id="rep_prev" onclick="generarReporte('${pac.id}')">Generar vista previa</button>
+      <button class="btn-line" id="rep_pdf" style="display:none" onclick="imprimirReporte('${pac.id}')">Guardar como PDF</button></div>
+    <div id="rep_msg" class="savehint" style="margin-top:8px"></div></div>
+    <div id="rep_out"></div>`;
+}
+async function generarReporte(pid){
+  const secs=[...document.querySelectorAll('.rsec:checked')].map(x=>x.value);
+  if(!secs.length){alert('Seleccione al menos una sección.');return;}
+  const out=document.getElementById('rep_out');out.innerHTML='<div class="load"><span class="dl"></span> Generando…</div>';
+  const pac=CUR_PAC;
+  let g=[];try{g=await api('patient_guardians?patient_id=eq.'+pac.id+'&select=full_name,relationship,phone',{schema:'clinico'});}catch(e){}
+  let parts=[];
+  parts.push(`<div class="rep-head"><div><div class="rep-org">Deportivo SNTSS Sección VI · Yucatán</div><div class="rep-sub">Curso de verano · Expediente de acompañamiento</div></div>
+    <div class="rep-meta">Folio: <b>${esc(pac.folio)}</b><br>Emitido: ${esc(new Date().toLocaleString('es-MX'))}</div></div>
+    <div class="rep-disc">Documento orientativo para acompañamiento y seguimiento. Los índices y valoraciones <b>no constituyen un diagnóstico</b> y no sustituyen la valoración de un profesional. Contiene datos personales de un menor: trato confidencial conforme a la normativa de protección de datos.</div>`);
+  if(secs.includes('datos')){
+    const rows=[['Nombre',pac.full_name],['Nombre preferido',pac.preferred_name],['Nacimiento',pac.birth_date],['Edad',edad(pac.birth_date)],['Sexo',pac.sex],['Escuela/ocupación',pac.school_or_occupation],['Estatus',pac.status]];
+    parts.push(`<h2 class="rep-h2">Resumen del expediente</h2><table class="rep-tbl">${rows.map(([k,v])=>`<tr><th>${k}</th><td>${esc(v||'—')}</td></tr>`).join('')}
+      ${g.length?`<tr><th>Tutor(es)</th><td>${g.map(x=>esc(x.full_name)+' ('+esc(x.relationship||'—')+(x.phone?' · '+esc(x.phone):'')+')').join('<br>')}</td></tr>`:''}</table>`);
+  }
+  if(secs.includes('historia')){
+    let h={sections:{}};try{const r=await api('rpc/historia_de',{method:'POST',body:{pid:pac.id}});h=(r&&r[0])||{sections:{}};}catch(e){}
+    const S=h.sections||{};
+    const body=HSECS.map(([k,lbl])=>{const s=S[k];if(!s)return '';if(s.no_evaluado)return `<tr><th>${esc(lbl)}</th><td><i>No evaluado</i></td></tr>`;if(!s.valor)return '';return `<tr><th>${esc(lbl)}</th><td>${esc(s.valor)}</td></tr>`;}).filter(Boolean).join('');
+    const extra=[['Impresión clínica',h.clinical_impression],['Objetivos terapéuticos',h.therapeutic_goals],['Plan de intervención',h.intervention_plan],['Pronóstico',h.prognosis],['Observaciones',h.observations],['Diagnóstico profesional',h.professional_diagnosis]].filter(([,v])=>v).map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('');
+    parts.push(`<h2 class="rep-h2">Historia clínica</h2>${(body||extra)?`<table class="rep-tbl">${body}${extra}</table>`:'<p class="rep-empty">Sin historia registrada.</p>'}`);
+  }
+  if(secs.includes('consultas')){
+    let enc=[];try{enc=await api('encounters?patient_id=eq.'+pac.id+'&select=id,starts_at,modality,objective,clinical_notes(format,subjective,objective,assessment,plan,free_text,signed_at,note_addenda(reason,content,created_at))&order=starts_at.desc',{schema:'clinico'});}catch(e){}
+    parts.push(`<h2 class="rep-h2">Consultas y notas</h2>${enc.length?enc.map(e=>{const n=(e.clinical_notes&&e.clinical_notes[0])||{};
+      const body=n.format==='libre'?esc(n.free_text||''):[['S','subjective'],['O','objective'],['A','assessment'],['P','plan']].map(([lp,k])=>n[k]?`<b>${lp}:</b> ${esc(n[k])}`:'').filter(Boolean).join('<br>');
+      const adds=(n.note_addenda||[]).map(a=>`<div class="rep-add"><b>Adenda</b> · ${esc(fmtDate(a.created_at))} · ${esc(a.reason||'')}<br>${esc(a.content||'')}</div>`).join('');
+      return `<div class="rep-enc"><b>${esc(fmtDate(e.starts_at))}</b> · ${esc(e.modality||'—')} ${n.signed_at?'· <i>Firmada '+esc(fmtDate(n.signed_at))+'</i>':'· <i>Borrador</i>'}${e.objective?'<br><span class="rep-obj">Objetivo: '+esc(e.objective)+'</span>':''}<div>${body||'<i>Sin nota</i>'}</div>${adds}</div>`;
+    }).join(''):'<p class="rep-empty">Sin consultas registradas.</p>'}`);
+  }
+  if(secs.includes('riesgos')){
+    let rs=[];try{rs=await api('rpc/riesgos_de',{method:'POST',body:{pid:pac.id}});}catch(e){}
+    parts.push(`<h2 class="rep-h2">Valoraciones de riesgo</h2><p class="rep-note">Registro operativo de acompañamiento; no constituye diagnóstico.</p>${rs.length?rs.map(r=>{const d=r.domains||{};
+      const chips=RDOMS.map(([k,lbl])=>{const v=d[k];return (v&&v.nivel&&v.nivel!=='sin_dato')?`${esc(lbl)}: <b>${esc(NIVLBL[v.nivel]||v.nivel)}</b>${v.nota?' — '+esc(v.nota):''}`:'';}).filter(Boolean).join('<br>');
+      return `<div class="rep-enc"><b>${esc(fmtDate(r.created_at))}</b>${r.emergency_contacted?' · Emergencia contactada':''}<div>${chips||'<i>Sin dominios marcados</i>'}</div>${r.protective_factors?'<div><b>Protectores:</b> '+esc(r.protective_factors)+'</div>':''}${r.actions_taken?'<div><b>Acciones:</b> '+esc(r.actions_taken)+'</div>':''}${r.referral?'<div><b>Derivación:</b> '+esc(r.referral)+'</div>':''}${r.follow_up?'<div><b>Seguimiento:</b> '+esc(r.follow_up)+'</div>':''}</div>`;
+    }).join(''):'<p class="rep-empty">Sin valoraciones de riesgo registradas.</p>'}`);
+  }
+  parts.push(`<div class="rep-foot">Generado por el sistema de acompañamiento · ${esc(SESS&&SESS.email||'')} · Herramienta orientativa, no sustituye valoración profesional.</div>`);
+  out.innerHTML=`<div id="repDoc" class="rep-doc">${parts.join('')}</div>`;
+  document.getElementById('rep_pdf').style.display='';
+  document.getElementById('rep_msg').textContent='Vista previa lista. Revise el contenido antes de exportar.';
+}
+async function imprimirReporte(pid){
+  const secs=[...document.querySelectorAll('.rsec:checked')].map(x=>x.value);
+  try{await rpc('reporte_registrar',{patient_id:pid,kind:'expediente',params:{sections:secs,generated_at:new Date().toISOString()}});}catch(e){}
+  document.body.classList.add('printing');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('printing'),500);
 }
 
 /* ---- Alta de usuario (solo admin) ---- */
