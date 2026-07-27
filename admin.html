@@ -73,6 +73,28 @@
   .hidden{display:none!important}
   .tag{font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:10px;background:var(--light);color:var(--navy)}
   .rolechip{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:10px;color:#fff;margin-right:4px}
+  /* ===== Modal / formularios / ficha ===== */
+  .modalbg{position:fixed;inset:0;background:rgba(20,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:24px;z-index:60;overflow:auto}
+  .modal{background:#fff;border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:640px;padding:20px}
+  .modal h3{margin:0 0 4px;color:var(--navy)}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.frow{grid-template-columns:1fr}}
+  .fld{margin:8px 0}
+  .fld label{display:block;font-weight:700;font-size:.76rem;color:var(--navy);margin-bottom:4px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.9rem;color:var(--ink);background:#fff}
+  .fld textarea{min-height:64px;resize:vertical}
+  .modact{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+  .btn-line{background:#fff;border:1.5px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;font-family:inherit}
+  .link-row{cursor:pointer}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+  .tabs button{border:none;background:var(--light);color:var(--navy);border-radius:9px;padding:8px 12px;font-weight:700;font-size:.83rem;cursor:pointer;font-family:inherit}
+  .tabs button.on{background:var(--blue);color:#fff}
+  .sec-h{font-weight:800;color:var(--navy);font-size:.9rem;margin:14px 0 4px}
+  .noeval{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--muted);font-weight:700;margin-top:4px}
+  .signed{background:rgba(63,158,90,.12);border:1px solid rgba(63,158,90,.4);border-radius:8px;padding:2px 8px;font-size:.7rem;font-weight:800;color:#2c6e3f}
+  .draft{background:rgba(233,177,10,.15);border:1px solid rgba(233,177,10,.5);border-radius:8px;padding:2px 8px;font-size:.7rem;font-weight:800;color:#8a6d1f}
+  .savebar{position:sticky;bottom:0;background:linear-gradient(0deg,#fff,#fff 70%,transparent);padding:12px 0;display:flex;gap:10px;align-items:center}
+  .savehint{font-size:.75rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -289,10 +311,11 @@ function exportCSV(){
 }
 
 async function vParticipantes(v){
-  const p=await api('patients?select=folio,full_name,preferred_name,birth_date,status,created_at&order=folio',{schema:'clinico'});
-  v.innerHTML=`<div class="disc">Alta y edición de expedientes llegan en la Fase 3. Aquí ves el catálogo actual (lectura).</div>
-    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Folio</th><th>Nombre</th><th>Preferido</th><th>Nacimiento</th><th>Estatus</th></tr></thead>
-    <tbody>${p.length?p.map(x=>`<tr><td class="num">${esc(x.folio)}</td><td>${esc(x.full_name)}</td><td>${esc(x.preferred_name||'—')}</td><td>${esc(x.birth_date||'—')}</td><td><span class="tag">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="5" class="empty"><b>Sin participantes registrados.</b> Se poblará al migrar/capturar.</td></tr>'}</tbody></table></div>`;
+  const p=await api('patients?select=folio,full_name,preferred_name,birth_date,status&order=folio',{schema:'clinico'});
+  const puedeAlta=ROLES.some(r=>['admin','clinico','capturista'].includes(r));
+  v.innerHTML=`<div class="toolbar">${puedeAlta?'<button class="btn-sm acc" onclick="formPaciente()">＋ Nuevo participante</button>':''}<span class="tag">${p.length} participantes</span></div>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Folio</th><th>Nombre</th><th>Preferido</th><th>Edad</th><th>Estatus</th></tr></thead>
+    <tbody>${p.length?p.map(x=>`<tr class="link-row" onclick="abrirFicha('${esc(x.folio)}')"><td class="num">${esc(x.folio)}</td><td>${esc(x.full_name)}</td><td>${esc(x.preferred_name||'—')}</td><td class="num">${edad(x.birth_date)}</td><td><span class="tag">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="5" class="empty"><b>Sin participantes.</b> Usa “Nuevo participante”.</td></tr>'}</tbody></table></div>`;
 }
 async function vInstrumentos(v){
   const [ins,ver]=await Promise.all([
@@ -313,7 +336,7 @@ async function vUsuarios(v){
   ]);
   const byP={};roles.forEach(r=>(byP[r.profile_id]=byP[r.profile_id]||[]).push(r.role));
   const cols={admin:'#C55A11',supervisor:'#159a9c',clinico:'#2E5496',facilitador:'#3f9e5a',capturista:'#7c4dbd'};
-  v.innerHTML=`<div class="disc">Alta de usuarios y asignación de roles: Fase 3 (aquí, lectura del directorio de tu organización).</div>
+  v.innerHTML=`${ROLES.includes('admin')?'<div class="toolbar"><button class="btn-sm acc" onclick="formUsuario()">＋ Nuevo usuario</button></div>':'<div class="disc">Solo un administrador puede dar de alta usuarios.</div>'}
     <div class="card" style="overflow-x:auto"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Roles</th></tr></thead>
     <tbody>${prof.map(p=>`<tr><td>${esc(p.full_name)}</td><td>${esc(p.email||'—')}</td><td>${(byP[p.id]||[]).map(r=>`<span class="rolechip" style="background:${cols[r]||'#6b7a8d'}">${esc(r)}</span>`).join('')||'—'}</td></tr>`).join('')}</tbody></table></div>`;
 }
@@ -323,6 +346,184 @@ async function vAuditoria(v){
   v.innerHTML=`<div class="card" style="overflow-x:auto"><h3>Registro de auditoría</h3><p class="s">Últimos 300 eventos sobre datos clínicos (solo lectura, solo admin).</p>
     <table><thead><tr><th>Fecha</th><th>Acción</th><th>Entidad</th><th>Registro</th></tr></thead>
     <tbody>${a.length?a.map(x=>`<tr><td>${esc(fmtDate(x.at))}</td><td><span class="pill" style="background:${accColor[x.action]||'#6b7a8d'}">${esc(x.action)}</span></td><td>${esc(x.entity)}</td><td style="font-size:.72rem;color:var(--muted)">${esc((x.entity_id||'').slice(0,8))}</td></tr>`).join(''):'<tr><td colspan="4" class="empty"><b>Sin eventos.</b></td></tr>'}</tbody></table></div>`;
+}
+
+/* ================= FASE 3 · ESCRITURA / FORMULARIOS ================= */
+let CUR_PAC=null;
+function rpc(fn,p){return api('rpc/'+fn,{method:'POST',body:{p}});}
+function modal(html){let el=document.getElementById('modalbg');if(!el){el=document.createElement('div');el.id='modalbg';el.className='modalbg';document.body.appendChild(el);}el.innerHTML='<div class="modal">'+html+'</div>';el.style.display='flex';el.onclick=e=>{if(e.target===el)cerrarModal();};}
+function cerrarModal(){const el=document.getElementById('modalbg');if(el)el.style.display='none';}
+function val(id){const e=document.getElementById(id);return e?String(e.value).trim():'';}
+const edad=bd=>{if(!bd)return '—';const d=new Date(bd),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))a--;return a;};
+
+/* ---- Alta / edición de participante ---- */
+function formPaciente(pac){
+  pac=pac||{};
+  modal(`<h3>${pac.id?'Editar':'Nuevo'} participante</h3>
+   <div class="frow">
+     <div class="fld"><label>Nombre completo *</label><input id="p_full" value="${esc(pac.full_name||'')}"></div>
+     <div class="fld"><label>Nombre preferido</label><input id="p_pref" value="${esc(pac.preferred_name||'')}"></div>
+     <div class="fld"><label>Fecha de nacimiento</label><input id="p_bd" type="date" value="${esc(pac.birth_date||'')}"></div>
+     <div class="fld"><label>Folio (auto si vacío)</label><input id="p_folio" value="${esc(pac.folio||'')}" ${pac.id?'disabled':''}></div>
+     <div class="fld"><label>Sexo</label><input id="p_sex" value="${esc(pac.sex||'')}"></div>
+     <div class="fld"><label>Teléfono</label><input id="p_tel" value="${esc(pac.phone||'')}"></div>
+     <div class="fld"><label>Escuela / ocupación</label><input id="p_esc" value="${esc(pac.school_or_occupation||'')}"></div>
+     <div class="fld"><label>Estatus</label><select id="p_st"><option ${pac.status==='activo'?'selected':''}>activo</option><option ${pac.status==='inactivo'?'selected':''}>inactivo</option><option ${pac.status==='egresado'?'selected':''}>egresado</option></select></div>
+   </div>
+   ${pac.id?'':`<div class="sec-h">Tutor (para menores)</div>
+   <div class="frow"><div class="fld"><label>Nombre del tutor</label><input id="t_nom"></div>
+     <div class="fld"><label>Parentesco</label><input id="t_par"></div>
+     <div class="fld"><label>Teléfono del tutor</label><input id="t_tel"></div></div>`}
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="p_save" onclick="guardarPaciente('${pac.id||''}')">Guardar</button></div>`);
+}
+async function guardarPaciente(id){
+  if(!val('p_full')){alert('El nombre completo es obligatorio');return;}
+  const b={id:id||'',full_name:val('p_full'),preferred_name:val('p_pref'),birth_date:val('p_bd'),folio:val('p_folio'),
+    sex:val('p_sex'),phone:val('p_tel'),school_or_occupation:val('p_esc'),status:val('p_st')};
+  if(!id){b.tutor_nombre=val('t_nom');b.tutor_parentesco=val('t_par');b.tutor_tel=val('t_tel');}
+  const btn=document.getElementById('p_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{const pid=await rpc('pac_guardar',b);cerrarModal();
+    if(id&&CUR_PAC){await abrirFicha(CUR_PAC.folio);}else{show('participantes');}}
+  catch(e){btn.disabled=false;btn.textContent='Guardar';alert('Error: '+e.message);}
+}
+
+/* ---- Ficha del participante ---- */
+async function abrirFicha(folio){
+  const arr=await api('patients?folio=eq.'+encodeURIComponent(folio)+'&select=*',{schema:'clinico'});
+  const pac=arr[0];if(!pac)return;CUR_PAC=pac;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('secTitle').textContent='Expediente · '+(pac.preferred_name||pac.full_name);
+  const v=document.getElementById('view');
+  v.innerHTML=`<button class="btn-sm" onclick="show('participantes')">‹ Volver a participantes</button>
+    <div class="tabs" id="ftabs" style="margin-top:10px">
+      <button class="on" data-t="datos">Datos</button>
+      <button data-t="historia">Historia clínica</button>
+      <button data-t="consultas">Consultas y notas</button>
+    </div><div id="fbody"></div>`;
+  v.querySelectorAll('#ftabs button').forEach(b=>b.onclick=()=>{v.querySelectorAll('#ftabs button').forEach(x=>x.classList.toggle('on',x===b));fichaTab(b.dataset.t,pac);});
+  fichaTab('datos',pac);
+}
+function fichaTab(t,pac){const el=document.getElementById('fbody');el.innerHTML='<div class="load"><span class="dl"></span> Cargando…</div>';
+  ({datos:tabDatos,historia:tabHistoria,consultas:tabConsultas}[t])(el,pac).catch(e=>el.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`);}
+async function tabDatos(el,pac){
+  const g=await api('patient_guardians?patient_id=eq.'+pac.id+'&select=full_name,relationship,phone',{schema:'clinico'});
+  const rows=[['Folio',pac.folio],['Nombre',pac.full_name],['Preferido',pac.preferred_name],['Nacimiento',pac.birth_date],['Edad',edad(pac.birth_date)],['Sexo',pac.sex],['Teléfono',pac.phone],['Escuela/ocupación',pac.school_or_occupation],['Estatus',pac.status]];
+  const puede=ROLES.some(r=>['admin','clinico','capturista'].includes(r));
+  el.innerHTML=`<div class="card"><div class="frow">${rows.map(([k,x])=>`<div class="fld"><label>${k}</label><div>${esc(x||'—')}</div></div>`).join('')}</div>
+    ${g.length?`<div class="sec-h">Tutor(es)</div>${g.map(x=>`<div>${esc(x.full_name)} · ${esc(x.relationship||'—')} · ${esc(x.phone||'—')}</div>`).join('')}`:''}
+    ${puede?`<div style="margin-top:12px"><button class="btn-sm acc" onclick='formPaciente(${JSON.stringify({id:pac.id,folio:pac.folio,full_name:pac.full_name,preferred_name:pac.preferred_name,birth_date:pac.birth_date,sex:pac.sex,phone:pac.phone,school_or_occupation:pac.school_or_occupation,status:pac.status}).replace(/'/g,"&#39;")})'>Editar datos</button></div>`:''}</div>`;
+}
+
+/* ---- Historia clínica (modular, guardado parcial, no evaluado) ---- */
+const HSECS=[['motivo','Motivo de consulta'],['problema','Problema actual (inicio, duración, frecuencia, intensidad)'],['desencadenantes','Factores desencadenantes'],['ant_psico','Antecedentes psicológicos'],['ant_psiq','Antecedentes psiquiátricos'],['ant_medicos','Antecedentes médicos / medicamentos / hospitalizaciones'],['ant_familiares','Antecedentes familiares'],['desarrollo','Historia del desarrollo (embarazo, nacimiento, psicomotor)'],['escolar','Historia escolar'],['familiar','Dinámica familiar / relaciones interpersonales'],['habitos','Sueño / alimentación / actividad física / sustancias'],['trauma','Eventos traumáticos'],['protectores','Factores protectores / red de apoyo'],['estado_mental','Evaluación del estado mental'],['riesgos','Evaluación inicial de riesgos']];
+async function tabHistoria(el,pac){
+  if(!ROLES.some(r=>['admin','clinico'].includes(r))){el.innerHTML='<div class="disc">Solo personal clínico puede ver o editar la historia clínica.</div>';return;}
+  const arr=await rpc('historia_de',{}).catch(()=>null); // fallback
+  let h={sections:{}};
+  try{const r=await api('rpc/historia_de',{method:'POST',body:{pid:pac.id}});h=(r&&r[0])||{sections:{}};}catch(e){}
+  const S=h.sections||{};
+  el.innerHTML=`<div class="card">
+    <div class="savehint">Guardado parcial: puedes llenar por partes y continuar después. Marca <b>No evaluado</b> cuando un apartado no aplica (evita confundir vacío con ausencia).</div>
+    ${HSECS.map(([k,lbl])=>`<div class="sec-h">${lbl}</div>
+      <textarea id="h_${k}" ${S[k]&&S[k].no_evaluado?'disabled':''}>${esc(S[k]?(S[k].valor||''):'')}</textarea>
+      <label class="noeval"><input type="checkbox" id="ne_${k}" ${S[k]&&S[k].no_evaluado?'checked':''} onchange="document.getElementById('h_${k}').disabled=this.checked"> No evaluado</label>`).join('')}
+    <div class="sec-h">Impresión clínica</div><textarea id="h_impr">${esc(h.clinical_impression||'')}</textarea>
+    <div class="sec-h">Objetivos terapéuticos</div><textarea id="h_obj">${esc(h.therapeutic_goals||'')}</textarea>
+    <div class="sec-h">Plan de intervención</div><textarea id="h_plan">${esc(h.intervention_plan||'')}</textarea>
+    <div class="sec-h">Pronóstico</div><textarea id="h_prono">${esc(h.prognosis||'')}</textarea>
+    <div class="sec-h">Observaciones</div><textarea id="h_obs">${esc(h.observations||'')}</textarea>
+    <div class="sec-h">Diagnóstico profesional <span class="draft">solo si aplica · registro expreso del profesional</span></div>
+    <textarea id="h_dx" placeholder="Dejar vacío si no procede. Un puntaje nunca es un diagnóstico.">${esc(h.professional_diagnosis||'')}</textarea>
+    <div class="savebar"><button class="btn-sm acc" id="h_save" onclick="guardarHistoria('${pac.id}')">Guardar historia</button><span class="savehint" id="h_msg"></span></div></div>`;
+}
+async function guardarHistoria(pid){
+  const sections={};HSECS.forEach(([k])=>{sections[k]={valor:document.getElementById('h_'+k).value,no_evaluado:document.getElementById('ne_'+k).checked};});
+  const b={patient_id:pid,sections,clinical_impression:val('h_impr'),therapeutic_goals:val('h_obj'),intervention_plan:val('h_plan'),prognosis:val('h_prono'),observations:val('h_obs'),professional_diagnosis:val('h_dx')};
+  const btn=document.getElementById('h_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('historia_guardar',b);document.getElementById('h_msg').textContent='Guardada ✓ '+new Date().toLocaleTimeString('es-MX');}
+  catch(e){alert('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Guardar historia';}
+}
+
+/* ---- Consultas y notas ---- */
+async function tabConsultas(el,pac){
+  if(!ROLES.some(r=>['admin','clinico'].includes(r))){el.innerHTML='<div class="disc">Solo personal clínico puede registrar consultas.</div>';return;}
+  const enc=await api('encounters?patient_id=eq.'+pac.id+'&select=id,starts_at,modality,objective,clinical_notes(id,format,subjective,objective,assessment,plan,free_text,signed_at,note_addenda(id,reason,content,created_at))&order=starts_at.desc',{schema:'clinico'});
+  el.innerHTML=`<div class="card"><button class="btn-sm acc" onclick="formConsulta('${pac.id}')">＋ Nueva consulta</button></div>
+    ${enc.length?enc.map(renderEnc).join(''):'<div class="empty">Sin consultas registradas.</div>'}`;
+}
+function renderEnc(e){
+  const n=(e.clinical_notes&&e.clinical_notes[0])||{};
+  const firm=n.signed_at?`<span class="signed">Firmada · ${esc(fmtDate(n.signed_at))}</span>`:`<span class="draft">Borrador</span>`;
+  const body=n.format==='libre'?esc(n.free_text||''):[['S','subjective'],['O','objective'],['A','assessment'],['P','plan']].map(([lp,k])=>n[k]?`<b>${lp}:</b> ${esc(n[k])}`:'').filter(Boolean).join('<br>');
+  const adds=(n.note_addenda||[]).map(a=>`<div style="margin-top:6px;padding:8px;border-left:3px solid var(--gold);background:#fffdf5;font-size:.82rem"><b>Adenda</b> · ${esc(fmtDate(a.created_at))} · ${esc(a.reason||'')}<br>${esc(a.content||'')}</div>`).join('');
+  return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <b>${esc(fmtDate(e.starts_at))} · ${esc(e.modality||'—')}</b>${firm}</div>
+    ${e.objective?`<div class="savehint" style="margin:4px 0">Objetivo: ${esc(e.objective)}</div>`:''}
+    <div style="font-size:.86rem;margin-top:6px">${body||'<span class="savehint">Sin nota</span>'}</div>${adds}
+    ${n.signed_at?`<div style="margin-top:8px"><button class="btn-line" onclick="formAdenda('${n.id}')">Agregar adenda</button></div>`:''}</div>`;
+}
+function formConsulta(pid){
+  modal(`<h3>Nueva consulta</h3>
+   <div class="frow">
+     <div class="fld"><label>Fecha y hora</label><input id="c_dt" type="datetime-local"></div>
+     <div class="fld"><label>Duración (min)</label><input id="c_dur" type="number" value="50"></div>
+     <div class="fld"><label>Modalidad</label><input id="c_mod" value="presencial"></div>
+     <div class="fld"><label>Formato</label><select id="c_fmt"><option>SOAP</option><option>DAP</option><option>libre</option></select></div>
+   </div>
+   <div class="fld"><label>Objetivo de la sesión</label><input id="c_obj"></div>
+   <div id="c_fields"></div>
+   <label class="noeval" style="margin-top:8px"><input type="checkbox" id="c_firm"> Firmar la nota (queda <b>bloqueada</b>; correcciones solo por adenda)</label>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="c_save" onclick="guardarConsulta('${pid}')">Guardar</button></div>`);
+  const render=()=>{const f=document.getElementById('c_fmt').value,box=document.getElementById('c_fields');
+    box.innerHTML=f==='libre'?`<div class="fld"><label>Nota libre</label><textarea id="c_free"></textarea></div>`:
+      `<div class="fld"><label>${f==='SOAP'?'Subjetivo (S)':'Datos (D)'}</label><textarea id="c_s"></textarea></div>
+       ${f==='SOAP'?`<div class="fld"><label>Objetivo (O)</label><textarea id="c_o"></textarea></div>`:''}
+       <div class="fld"><label>${f==='SOAP'?'Evaluación (A)':'Evaluación (A)'}</label><textarea id="c_a"></textarea></div>
+       <div class="fld"><label>Plan (P)</label><textarea id="c_p"></textarea></div>`;};
+  document.getElementById('c_fmt').onchange=render;render();
+}
+async function guardarConsulta(pid){
+  const fmt=val('c_fmt');
+  const b={patient_id:pid,format:fmt,starts_at:val('c_dt')?new Date(val('c_dt')).toISOString():null,
+    duration_min:val('c_dur'),modality:val('c_mod'),objective:val('c_obj'),firmar:document.getElementById('c_firm').checked};
+  if(fmt==='libre')b.free_text=val('c_free');else{b.subjective=val('c_s');b.objective=(document.getElementById('c_o')?val('c_o'):'');b.assessment=val('c_a');b.plan=val('c_p');}
+  const btn=document.getElementById('c_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('consulta_guardar',b);cerrarModal();fichaTab('consultas',CUR_PAC);}
+  catch(e){btn.disabled=false;btn.textContent='Guardar';alert('Error: '+e.message);}
+}
+function formAdenda(noteId){
+  modal(`<h3>Agregar adenda</h3><p class="savehint">La nota firmada no se modifica; la adenda queda registrada con autor, fecha y motivo.</p>
+   <div class="fld"><label>Motivo</label><input id="a_reason"></div>
+   <div class="fld"><label>Contenido</label><textarea id="a_content"></textarea></div>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="a_save" onclick="guardarAdenda('${noteId}')">Guardar adenda</button></div>`);
+}
+async function guardarAdenda(noteId){
+  if(!val('a_reason')||!val('a_content')){alert('Motivo y contenido son obligatorios');return;}
+  const btn=document.getElementById('a_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('nota_adenda',{note_id:noteId,reason:val('a_reason'),content:val('a_content')});cerrarModal();fichaTab('consultas',CUR_PAC);}
+  catch(e){btn.disabled=false;btn.textContent='Guardar adenda';alert('Error: '+e.message);}
+}
+
+/* ---- Alta de usuario (solo admin) ---- */
+function formUsuario(){
+  modal(`<h3>Nuevo usuario</h3>
+   <div class="fld"><label>Nombre completo</label><input id="u_full"></div>
+   <div class="fld"><label>Correo</label><input id="u_email" type="email"></div>
+   <div class="fld"><label>Contraseña temporal (mín. 8)</label><input id="u_pass"></div>
+   <div class="fld"><label>Rol</label><select id="u_role">
+     <option value="facilitador">Facilitador</option><option value="capturista">Capturista</option>
+     <option value="clinico">Clínico</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></div>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="u_save" onclick="guardarUsuario()">Crear</button></div>`);
+}
+async function guardarUsuario(){
+  if(!val('u_full')||!val('u_email')||val('u_pass').length<8){alert('Nombre, correo y contraseña (mín. 8 caracteres) son obligatorios');return;}
+  const btn=document.getElementById('u_save');btn.disabled=true;btn.textContent='Creando…';
+  try{await rpc('usuario_crear',{full_name:val('u_full'),email:val('u_email'),password:val('u_pass'),role:val('u_role')});cerrarModal();show('usuarios');}
+  catch(e){btn.disabled=false;btn.textContent='Crear';alert('Error: '+e.message);}
 }
 </script>
 </body>

@@ -66,3 +66,8 @@ Uso académico y de acompañamiento. **No es un instrumento de diagnóstico.**
 - **Inicio de sesión real** con Supabase Auth (correo + contraseña). El acceso y lo que ve cada quien lo deciden los **roles y RLS** (admin/supervisor entran; otros roles se bloquean).
 - Secciones: Resumen (KPIs y gráficas), Sesiones del estudio (tabla + CSV), Participantes, Instrumentos, Usuarios y roles, y Auditoría.
 - Diferencia con `dashboard.html`: el dashboard usa una *clave compartida* para el equipo de campo; el **panel admin** usa *cuenta personal* con permisos por rol y registro de auditoría. Es la vía segura y la base de la Fase 3.
+
+
+## Fase 3 · Núcleo clínico (el panel ya escribe)
+
+El panel de administración pasó de solo-lectura a **operativo**: alta/edición de participantes (con tutor y folio automático), **ficha de expediente** con historia clínica modular (guardado parcial + “No evaluado”), **consultas** con nota SOAP/DAP/libre **firmable** y **adendas** sobre notas firmadas, y **alta de usuarios y roles** (solo admin). Todo con permisos por rol, validación en el servidor y auditoría. Detalle y pruebas: `docs/FASE3.md`.
