@@ -119,6 +119,12 @@
   .sem-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
   .pl-names{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
   .pl-tag{display:inline-flex;align-items:center;gap:5px;border:1.5px solid #d7dee6;border-radius:20px;padding:3px 10px 3px 5px;font-size:.78rem;font-weight:700;color:var(--navy)}
+  .pl-why{font-size:.7rem;color:var(--muted);text-align:center;line-height:1.2;margin-top:2px}
+  .pl-reasons{display:flex;flex-wrap:wrap;gap:6px}
+  .pl-rchip{border:2px solid var(--light,#eef2f7);background:#fff;border-radius:20px;padding:7px 12px;font-size:.82rem;font-weight:700;color:var(--navy);cursor:pointer;font-family:inherit;transition:.12s}
+  .pl-rchip:hover{border-color:var(--blue)}
+  .pl-rchip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .pl-why-list{margin-top:8px;font-size:.78rem;color:#41505f;line-height:1.5;border-top:1px dashed #e3e9ef;padding-top:6px}
   .ralert{background:rgba(214,64,64,.1);border:1px solid rgba(214,64,64,.45);border-radius:10px;padding:12px 14px;font-size:.86rem;color:#8a2b2b;font-weight:600;margin-bottom:12px}
   .rchip{display:inline-block;border-radius:8px;padding:3px 9px;font-size:.76rem;font-weight:700;border:1px solid #d7dee6;background:#f3f6f9;color:var(--navy)}
   .rchip.lv-bajo{background:rgba(63,158,90,.12);border-color:rgba(63,158,90,.4);color:#2c6e3f}
@@ -805,18 +811,34 @@ function plBoard(v){
 }
 function plCard(m,i){
   if(m.mood==null)return `<button class="pl-card pend" onclick="plPick(${i})"><div class="pl-nm">${esc(m.name)}</div><div class="pl-st">Toca para marcar</div></button>`;
-  return `<button class="pl-card" style="border-color:${MOODCOL[m.mood]}" onclick="plPick(${i})"><div class="pl-face">${faceSVG(m.mood,46)}</div><div class="pl-nm">${esc(m.name)}</div><div class="pl-lb" style="color:${MOODCOL[m.mood]}">${MOODLBL[m.mood]}</div></button>`;
+  const why=(m.reasons&&m.reasons.length?m.reasons.join(' · '):'')||m.reason_note||'';
+  return `<button class="pl-card" style="border-color:${MOODCOL[m.mood]}" onclick="plPick(${i})"><div class="pl-face">${faceSVG(m.mood,46)}</div><div class="pl-nm">${esc(m.name)}</div><div class="pl-lb" style="color:${MOODCOL[m.mood]}">${MOODLBL[m.mood]}</div>${why?`<div class="pl-why">${esc(why)}</div>`:''}</button>`;
 }
+const PLREASONS=['Algo en casa','Los amigos / compañeros','La actividad de hoy','Dormí poco / cansancio','Me siento mal del cuerpo','Estoy contento/a','No sé'];
 function plPick(i){
   const m=PL.members[i];
   modal(`<h3>${esc(m.name)}</h3><p class="savehint">¿Cómo te sientes hoy? Elige tu carita.</p>
-   <div class="pl-picker">${[0,1,2,3,4].map(x=>`<button class="pl-opt" onclick="plSet(${i},${x})">${faceSVG(x,50)}<small>${MOODLBL[x]}</small></button>`).join('')}</div>
+   <div class="pl-picker">${[0,1,2,3,4].map(x=>`<button class="pl-opt" onclick="plReason(${i},${x})">${faceSVG(x,50)}<small>${MOODLBL[x]}</small></button>`).join('')}</div>
    <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cerrar</button></div>`);
 }
-function plSet(i,x){PL.members[i].mood=x;PL.members[i].semaforo=moodSem(x);cerrarModal();plBoard(document.getElementById('view'));}
+function plReason(i,mood){
+  const m=PL.members[i],sel=m.reasons||[],note=m.reason_note||'';
+  modal(`<h3>${esc(m.name)}</h3>
+   <div style="display:flex;align-items:center;gap:10px;margin:2px 0 10px">${faceSVG(mood,46)}<div><b style="color:${MOODCOL[mood]};font-size:1.05rem">${MOODLBL[mood]}</b><div class="savehint">¿Por qué te sientes así? Puedes elegir varios (opcional).</div></div></div>
+   <div class="pl-reasons" id="pl_reasons">${PLREASONS.map(t=>`<button type="button" class="pl-rchip ${sel.includes(t)?'on':''}" data-t="${esc(t)}" onclick="this.classList.toggle('on')">${esc(t)}</button>`).join('')}</div>
+   <div class="fld" style="margin-top:10px"><label>Otra razón / nota (opcional)</label><input id="pl_note" placeholder="En sus palabras…" value="${esc(note)}"></div>
+   <div class="modact"><button class="btn-line" onclick="plPick(${i})">‹ Cambiar carita</button>
+     <button class="btn-sm acc" onclick="plSet(${i},${mood})">Guardar</button></div>`);
+}
+function plSet(i,mood){
+  PL.members[i].mood=mood;PL.members[i].semaforo=moodSem(mood);
+  PL.members[i].reasons=[...document.querySelectorAll('#pl_reasons .pl-rchip.on')].map(b=>b.dataset.t);
+  PL.members[i].reason_note=val('pl_note');
+  cerrarModal();plBoard(document.getElementById('view'));
+}
 function plCancelar(){if(!confirm('¿Cancelar este pase de lista? No se guardará.'))return;PL=null;show('paselista');}
 async function plGuardar(){
-  const entries=PL.members.filter(m=>m.mood!=null).map(m=>({name:m.name,mood:m.mood,semaforo:m.semaforo}));
+  const entries=PL.members.filter(m=>m.mood!=null).map(m=>({name:m.name,mood:m.mood,semaforo:m.semaforo,reasons:m.reasons||[],reason_note:m.reason_note||''}));
   if(!entries.length){alert('Marca al menos un integrante.');return;}
   const btn=document.getElementById('pl_save');btn.disabled=true;btn.textContent='Guardando…';
   try{await rpc('rollcall_guardar',{team_name:PL.team_name,week:PL.week,corte:PL.corte,activity:PL.activity,entries});
@@ -835,7 +857,8 @@ async function plRecientes(){
     box.innerHTML=(arr&&arr.length)?arr.map(r=>{const c={verde:0,amarillo:0,rojo:0};(r.entries||[]).forEach(e=>c[e.semaforo]=(c[e.semaforo]||0)+1);
       return `<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><b style="color:var(--navy)">${esc(r.team||'Pase de lista')}</b><span class="savehint">${esc(fmtDate(r.created_at))} · Sem ${esc(r.week||'—')} · ${esc(r.corte||'')} · ${esc(r.activity||'')}</span></div>
         <div class="pl-sem" style="margin-top:8px">${semChip('verde',c.verde)}${semChip('amarillo',c.amarillo)}${semChip('rojo',c.rojo)}</div>
-        <div class="pl-names">${(r.entries||[]).map(e=>`<span class="pl-tag" style="border-color:${SEMCOL[e.semaforo]}">${faceSVG(e.mood,18)}<span>${esc(e.name)}</span></span>`).join('')}</div></div>`;}).join(''):'<div class="empty">Aún no hay pases de lista registrados.</div>';
+        <div class="pl-names">${(r.entries||[]).map(e=>{const why=[...(e.reasons||[]),e.reason_note].filter(Boolean).join(' · ');return `<span class="pl-tag" style="border-color:${SEMCOL[e.semaforo]}"${why?` title="${esc(why)}"`:''}>${faceSVG(e.mood,18)}<span>${esc(e.name)}</span></span>`;}).join('')}</div>
+        ${(r.entries||[]).some(e=>(e.reasons&&e.reasons.length)||e.reason_note)?`<div class="pl-why-list">${(r.entries||[]).filter(e=>(e.reasons&&e.reasons.length)||e.reason_note).map(e=>`<div><b>${esc(e.name)}:</b> ${esc([...(e.reasons||[]),e.reason_note].filter(Boolean).join(' · '))}</div>`).join('')}</div>`:''}</div>`;}).join(''):'<div class="empty">Aún no hay pases de lista registrados.</div>';
   }catch(e){box.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`;}
 }
 
