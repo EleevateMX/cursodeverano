@@ -78,6 +78,16 @@
   body.teen .toast{background:#0b1220;border:1px solid #2b3c5e}
   .hidden{display:none!important}
   .back{background:none;border:none;color:var(--blue);font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;padding:4px 0}
+  /* ===== objetos movibles (arrastrar) ===== */
+  .draggable{touch-action:none;cursor:grab}
+  .draggable.dragging{cursor:grabbing;z-index:40;transform:scale(1.12);box-shadow:0 12px 26px rgba(31,56,100,.28);transition:none}
+  @keyframes wiggle{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+  @keyframes absorb{0%{transform:scale(1);opacity:1}55%{transform:scale(.4) translateY(30px);opacity:.7}100%{transform:scale(0) translateY(60px);opacity:0}}
+  .calmbox{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:74%;min-height:70px;border:3px dashed #7fb3ff;border-radius:18px;background:rgba(143,211,255,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2E5496;font-weight:800;font-size:.82rem;text-align:center;padding:8px;transition:.15s}
+  body.teen .calmbox{border-color:#3b5482;background:rgba(59,84,130,.2);color:#8fb0ff}
+  .calmbox.hot{background:rgba(63,158,90,.22);border-color:var(--green);color:var(--green);transform:translateX(-50%) scale(1.03)}
+  .buddy{position:fixed;width:60px;height:60px;bottom:120px;right:16px;z-index:30;filter:drop-shadow(0 6px 10px rgba(31,56,100,.22));animation:float 1.8s ease-in-out infinite alternate}
+  .buddy.dragging{animation:none}
 </style>
 </head>
 <body>
@@ -118,6 +128,31 @@ function P(text){return `<div class="prompt"><h2>${text}</h2><button class="spea
 function toast(m,ms=2200){const t=el(`<div class="toast">${m}</div>`);document.body.appendChild(t);setTimeout(()=>t.remove(),ms);}
 function dots(i,n){let d='<div class="dots">';for(let k=0;k<n;k++)d+=`<span class="dot ${k<=i?'on':''}"></span>`;return d+'</div>';}
 function head(title){return `<div class="topbar"><button class="back" onclick="menu()">‹ Menú</button><span class="badge">${title}</span></div>`;}
+/* ===== arrastrar y soltar (pointer events: funciona con dedo y mouse) ===== */
+function makeDrag(node,opts){
+  opts=opts||{};node.classList.add('draggable');
+  let sx,sy,bx,by,moved,cap=null;
+  const parentRect=()=>{const p=node.offsetParent;return p?p.getBoundingClientRect():{left:0,top:0};};
+  const bounds=()=>opts.area?opts.area.getBoundingClientRect():{left:0,top:0,width:window.innerWidth,height:window.innerHeight};
+  node.addEventListener('pointerdown',e=>{
+    e.preventDefault();cap=e.pointerId;moved=0;try{node.setPointerCapture(cap);}catch(_){}
+    const r=node.getBoundingClientRect(),pr=parentRect();
+    bx=r.left-pr.left;by=r.top-pr.top;sx=e.clientX;sy=e.clientY;
+    node.style.left=bx+'px';node.style.top=by+'px';node.style.right='auto';node.style.margin='0';
+    node.classList.add('dragging');
+  });
+  node.addEventListener('pointermove',e=>{
+    if(cap==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;moved=Math.max(moved,Math.abs(dx)+Math.abs(dy));
+    const b=bounds(),pr=parentRect(),minX=b.left-pr.left,minY=b.top-pr.top;
+    let nx=Math.max(minX,Math.min(minX+b.width-node.offsetWidth,bx+dx));
+    let ny=Math.max(minY,Math.min(minY+b.height-node.offsetHeight,by+dy));
+    node.style.left=nx+'px';node.style.top=ny+'px';if(opts.onMove)opts.onMove(e);
+  });
+  const end=e=>{if(cap==null)return;try{node.releasePointerCapture(cap);}catch(_){}cap=null;node.classList.remove('dragging');if(opts.onEnd)opts.onEnd(e,moved);};
+  node.addEventListener('pointerup',end);node.addEventListener('pointercancel',end);
+}
+function overZone(e,zone){if(!zone)return false;const r=zone.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;}
+const CHEERS=['¡Muy bien!','¡Vas genial!','¡Qué bien lo haces!','¡Sigue así!','¡Eres valiente!'];
 
 /* ===== BANDS (protocolo: 6-7, 8-9, 10-11, 12-13, 14) ===== */
 const ACC_KID=[{id:'acerco',t:'Me acerco y participo',c:'#3f9e5a'},{id:'miro',t:'Me quedo mirando',c:'#4a90d9'},{id:'escondo',t:'Me alejo o me escondo',c:'#e0574f'},{id:'adulto',t:'Busco a un adulto',c:'#7c4dbd'}];
@@ -203,8 +238,11 @@ function menu(){
     <div class="tiles">${b.mods.map(k=>{const m=MODEFS[k];return `<button class="tile ${S.done[k]?'done':''}" style="${b.mode==='kid'?`background:${m.c}`:''}" onclick="launch('${k}')">
       ${S.done[k]?`<span class="chk">${icon('check',16,'#fff')}</span>`:''}<span class="ic">${icon(m.ic,36,b.mode==='kid'?'#fff':m.c)}</span>${m.name}</button>`;}).join('')}</div>
     <div class="foot"><button class="btn btn-primary btn-lg" onclick="cierre()">Cierre del observador ▸</button>
-      <button class="link" style="margin:12px auto 0;display:block" onclick="inicio()">Cambiar de participante</button></div></div>`;
-  if(S.edad<12)autoRead(`¡Hola ${S.nino.nombre.split(' ')[0]}!`);
+      <button class="link" style="margin:12px auto 0;display:block" onclick="inicio()">Cambiar de participante</button></div>
+    ${S.edad<12?`<div class="buddy" id="buddy" title="¡Muéveme!">${mascot(60)}</div>`:''}</div>`;
+  if(S.edad<12){autoRead(`¡Hola ${S.nino.nombre.split(' ')[0]}!`);
+    const bud=document.getElementById('buddy');
+    if(bud)makeDrag(bud,{onEnd:(e,moved)=>{if(moved<8){bud.style.animation='wiggle .5s ease';speak(CHEERS[Math.floor(Math.random()*CHEERS.length)]);setTimeout(()=>bud.style.animation='float 1.8s ease-in-out infinite alternate',520);}}});}
 }
 function launch(k){MODEFS[k].run();}
 function finish(k){S.done[k]=true;menu();}
@@ -311,12 +349,19 @@ function glo_pick(){
   autoRead(q);
 }
 function glo_pop(){
-  const sel=S.data.worries.length?S.data.worries:WORRIES.slice(0,3).map(w=>w.id);const q="Ahora revienta tus preocupaciones.";
+  const sel=S.data.worries.length?S.data.worries:WORRIES.slice(0,3).map(w=>w.id);const q="Arrastra cada preocupación a la caja de la calma.";
   app.innerHTML=`<div class="screen">${head('Globos de la calma')}
-    <div class="card">${P(q)}<div id="pa" style="position:relative;height:280px">${sel.map((id,k)=>{const w=WORRIES.find(x=>x.id===id);return `<div class="balloon" style="position:absolute;width:42%;background:${w.c};left:${5+(k%2)*48}%;top:${5+Math.floor(k/2)*42}%;animation:float 1.6s ease-in-out ${k*0.2}s infinite alternate" data-id="${id}">${w.t}</div>`;}).join('')}
-      <div id="allpop" class="center hidden" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--green)">¡Muy bien!</div></div></div>
+    <div class="card">${P(q)}<div id="pa" style="position:relative;height:340px">${sel.map((id,k)=>{const w=WORRIES.find(x=>x.id===id);return `<div class="balloon draggable" style="position:absolute;width:40%;background:${w.c};left:${4+(k%2)*52}%;top:${3+Math.floor(k/2)*27}%" data-id="${id}">${w.t}</div>`;}).join('')}
+      <div class="calmbox" id="calm">🌿 Caja de la calma<small style="font-weight:600;display:block;opacity:.85">suéltalas aquí</small></div>
+      <div id="allpop" class="center hidden" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--green);font-size:1.2rem;background:rgba(255,255,255,.85);border-radius:16px">¡Muy bien! 🎉</div></div>
+      <p class="muted" style="font-size:.76rem;text-align:center;margin-top:6px">Tip: también puedes tocar un globo para soltarlo.</p></div>
     <div class="foot"><button class="btn btn-primary" onclick="glo_breathe()">Siguiente</button></div></div>`;
-  let left=sel.length;document.querySelectorAll('#pa .balloon').forEach(b=>b.onclick=()=>{b.style.transition='.15s';b.style.transform='scale(0)';setTimeout(()=>b.remove(),160);if(--left<=0)document.getElementById('allpop').classList.remove('hidden');speak('Pop');});
+  const area=document.getElementById('pa'),calm=document.getElementById('calm');let left=sel.length;
+  const absorb=b=>{if(!b||b.__gone)return;b.__gone=true;calm.classList.remove('hot');b.style.animation='absorb .42s ease forwards';speak('Muy bien');
+    setTimeout(()=>b.remove(),420);if(--left<=0){document.getElementById('allpop').classList.remove('hidden');speak('¡Muy bien!');}};
+  document.querySelectorAll('#pa .balloon').forEach(b=>makeDrag(b,{area,
+    onMove:e=>calm.classList.toggle('hot',overZone(e,calm)),
+    onEnd:(e,moved)=>{if(overZone(e,calm)||moved<8)absorb(b);else calm.classList.remove('hot');}}));
   autoRead(q);
 }
 function glo_breathe(){

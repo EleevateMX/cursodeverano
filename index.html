@@ -99,6 +99,9 @@
   .fieldlinks span{color:var(--muted);font-weight:700}
   .fieldlinks a{color:var(--blue);font-weight:700;text-decoration:none;background:var(--light);padding:6px 10px;border-radius:8px}
   .fieldlinks a:hover{background:#e7eef5}
+  .qrbox{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .qrimg{width:150px;height:150px;display:flex;align-items:center;justify-content:center;border:1px solid #e3e9ef;border-radius:10px;background:#fff;font-size:.72rem;color:var(--muted);text-align:center;padding:4px}
+  .qracts{display:flex;gap:6px}
   .ralert{background:rgba(214,64,64,.1);border:1px solid rgba(214,64,64,.45);border-radius:10px;padding:12px 14px;font-size:.86rem;color:#8a2b2b;font-weight:600;margin-bottom:12px}
   .rchip{display:inline-block;border-radius:8px;padding:3px 9px;font-size:.76rem;font-weight:700;border:1px solid #d7dee6;background:#f3f6f9;color:var(--navy)}
   .rchip.lv-bajo{background:rgba(63,158,90,.12);border-color:rgba(63,158,90,.4);color:#2c6e3f}
@@ -176,6 +179,7 @@
   </main>
 </div>
 
+<script src="qrcode.js"></script>
 <script>
 /* ================= CONFIG ================= */
 const SB="https://sclqzavebwinezpivmwr.supabase.co";
@@ -672,20 +676,27 @@ function baseURL(){const u=location.href.split('#')[0].split('?')[0];return u.re
 async function vEnlaces(v){
   const base=baseURL();
   const links=[
-    {id:'lk_ins',ic:'🎮',t:'Instrumento · equipo de campo',url:base+'instrumento.html',
+    {id:'lk_ins',ic:'🎮',t:'Instrumento · equipo de campo',url:base+'instrumento.html',qr:true,
      d:'Los juegos que se muestran al menor desde el teléfono. Al abrirlo por primera vez pide la <b>clave de aplicación</b> (se guarda en el teléfono) y funciona sin internet con cola de sincronización.'},
-    {id:'lk_dsh',ic:'📈',t:'Tablero de campo · métricas',url:base+'dashboard.html',
+    {id:'lk_dsh',ic:'📈',t:'Tablero de campo · métricas',url:base+'dashboard.html',qr:true,
      d:'Vista de solo lectura con las métricas de las sesiones. Pide una <b>clave de acceso</b> de tablero. Útil para revisar avances sin entrar al panel completo.'}
   ];
   v.innerHTML=`
-    <div class="disc">Comparte estas ligas con el equipo de campo. Las <b>claves</b> (de aplicación y de tablero) se entregan por canal privado y <b>no</b> van dentro del enlace. Herramienta de acompañamiento; <b>no constituye diagnóstico</b>.</div>
+    <div class="disc">Comparte estas ligas con el equipo de campo. Escanea el <b>código QR</b> con la cámara del teléfono para abrir el instrumento al instante. Las <b>claves</b> (de aplicación y de tablero) se entregan por canal privado y <b>no</b> van dentro del enlace. Herramienta de acompañamiento; <b>no constituye diagnóstico</b>.</div>
     ${links.map(l=>`<div class="card">
-      <div style="display:flex;align-items:center;gap:10px"><div style="font-size:1.4rem">${l.ic}</div>
-        <div><b style="color:var(--navy)">${l.t}</b><div class="savehint">${l.d}</div></div></div>
-      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
-        <input id="${l.id}" readonly value="${esc(l.url)}" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid #d7dee6;border-radius:8px;background:#f6f9fc;font-size:.82rem">
-        <button class="btn-sm acc" onclick="copiar('${l.id}',this)">Copiar liga</button>
-        <a class="btn-line" href="${esc(l.url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir ↗</a>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:1;min-width:240px">
+          <div style="display:flex;align-items:center;gap:10px"><div style="font-size:1.4rem">${l.ic}</div>
+            <div><b style="color:var(--navy)">${l.t}</b><div class="savehint">${l.d}</div></div></div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+            <input id="${l.id}" readonly value="${esc(l.url)}" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #d7dee6;border-radius:8px;background:#f6f9fc;font-size:.82rem">
+            <button class="btn-sm acc" onclick="copiar('${l.id}',this)">Copiar liga</button>
+            <a class="btn-line" href="${esc(l.url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir ↗</a>
+          </div>
+        </div>
+        ${l.qr?`<div class="qrbox"><div id="${l.id}_qr" class="qrimg">Generando QR…</div>
+          <div class="qracts"><button class="btn-line" onclick="descargarQR('${l.id}_qr','${l.t.split(' · ')[0]}')">Descargar</button>
+            <button class="btn-line" onclick="imprimirQR('${l.id}_qr','${esc(l.t)}','${esc(l.url)}')">Imprimir</button></div></div>`:''}
       </div></div>`).join('')}
     <div class="card"><b style="color:var(--navy)">Cómo empezar una prueba</b>
       <ol style="margin:8px 0 0;padding-left:20px;font-size:.86rem;line-height:1.7;color:#41505f">
@@ -694,7 +705,29 @@ async function vEnlaces(v){
         <li>Revisa los resultados en <b>Resumen</b> / <b>Tablero de campo</b> y registra lo observado en la <b>ficha</b> (historia, consultas, riesgos).</li>
         <li>Genera el <b>Reporte / PDF</b> desde la ficha cuando lo necesites.</li>
       </ol></div>`;
+  links.filter(l=>l.qr).forEach(l=>pintarQR(l.id+'_qr',l.url));
 }
+function pintarQR(boxId,url){
+  const box=document.getElementById(boxId);if(!box)return;
+  if(typeof qrcode==='undefined'){box.innerHTML='<span class="savehint">QR no disponible</span>';return;}
+  try{const q=qrcode(0,'M');q.addData(url);q.make();
+    box.innerHTML='';const img=new Image();img.src=q.createDataURL(6,4);img.alt='Código QR';img.width=150;img.height=150;
+    img.style.imageRendering='pixelated';box.appendChild(img);box.dataset.src=img.src;
+  }catch(e){box.innerHTML='<span class="savehint">QR no disponible</span>';}
+}
+function descargarQR(boxId,nombre){const box=document.getElementById(boxId);const src=box&&box.dataset.src;if(!src)return;
+  const a=document.createElement('a');a.href=src;a.download=('QR-'+nombre).replace(/[^\w-]+/g,'-')+'.gif';document.body.appendChild(a);a.click();a.remove();}
+function imprimirQR(boxId,titulo,url){const box=document.getElementById(boxId);const src=box&&box.dataset.src;if(!src)return;
+  const w=window.open('','_blank','width=420,height=560');if(!w)return;
+  w.document.write(`<!doctype html><meta charset="utf-8"><title>${titulo}</title>
+   <div style="font-family:system-ui,sans-serif;text-align:center;padding:24px">
+     <h2 style="color:#0f2540;margin:0 0 4px">${titulo}</h2>
+     <p style="color:#5a6b7b;font-size:13px;margin:0 0 16px">Escanea con la cámara del teléfono</p>
+     <img src="${src}" style="width:280px;height:280px;image-rendering:pixelated">
+     <p style="color:#5a6b7b;font-size:11px;word-break:break-all;margin-top:12px">${url}</p>
+     <p style="color:#8a97a5;font-size:10px;margin-top:14px">Herramienta de acompañamiento · no constituye diagnóstico</p>
+   </div><script>onload=function(){print();}<\/script>`);
+  w.document.close();}
 function copiar(id,btn){const inp=document.getElementById(id);const txt=inp.value;
   const done=()=>{const o=btn.textContent;btn.textContent='¡Copiado!';setTimeout(()=>btn.textContent=o,1400);};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{inp.select();document.execCommand('copy');done();});}
