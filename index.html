@@ -102,6 +102,23 @@
   .qrbox{display:flex;flex-direction:column;align-items:center;gap:6px}
   .qrimg{width:150px;height:150px;display:flex;align-items:center;justify-content:center;border:1px solid #e3e9ef;border-radius:10px;background:#fff;font-size:.72rem;color:var(--muted);text-align:center;padding:4px}
   .qracts{display:flex;gap:6px}
+  /* ===== pase de lista · semáforo ===== */
+  .pl-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:12px 0}
+  .pl-card{border:2px solid #d7dee6;background:#fff;border-radius:16px;padding:14px 10px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:120px;justify-content:center;transition:.12s;box-shadow:0 1px 4px rgba(31,56,100,.06)}
+  .pl-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(31,56,100,.12)}
+  .pl-card.pend{border-style:dashed;color:var(--muted)}
+  .pl-nm{font-weight:800;color:var(--navy);font-size:.95rem;text-align:center}
+  .pl-st{font-size:.74rem;color:var(--muted)}
+  .pl-lb{font-weight:800;font-size:.82rem}
+  .pl-picker{display:flex;gap:6px;justify-content:space-between;margin:8px 0}
+  .pl-opt{flex:1;border:2px solid var(--light,#eef2f7);background:#fff;border-radius:14px;padding:10px 2px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:.12s}
+  .pl-opt:hover{border-color:var(--blue);transform:scale(1.05)}
+  .pl-opt small{font-size:.6rem;color:var(--muted);font-weight:700;text-align:center;line-height:1.05}
+  .pl-sem{display:flex;gap:10px;flex-wrap:wrap}
+  .sem-chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;color:var(--navy);background:#f6f9fc;border:1px solid #e3e9ef;border-radius:20px;padding:4px 12px}
+  .sem-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .pl-names{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .pl-tag{display:inline-flex;align-items:center;gap:5px;border:1.5px solid #d7dee6;border-radius:20px;padding:3px 10px 3px 5px;font-size:.78rem;font-weight:700;color:var(--navy)}
   .ralert{background:rgba(214,64,64,.1);border:1px solid rgba(214,64,64,.45);border-radius:10px;padding:12px 14px;font-size:.86rem;color:#8a2b2b;font-weight:600;margin-bottom:12px}
   .rchip{display:inline-block;border-radius:8px;padding:3px 9px;font-size:.76rem;font-weight:700;border:1px solid #d7dee6;background:#f3f6f9;color:var(--navy)}
   .rchip.lv-bajo{background:rgba(63,158,90,.12);border-color:rgba(63,158,90,.4);color:#2c6e3f}
@@ -161,6 +178,7 @@
     <nav id="nav">
       <button data-sec="resumen" class="active"><span class="ic">📊</span> Resumen</button>
       <button data-sec="sesiones"><span class="ic">🗂️</span> Sesiones del estudio</button>
+      <button data-sec="paselista"><span class="ic">🚦</span> Pase de lista</button>
       <button data-sec="participantes"><span class="ic">🧒</span> Participantes</button>
       <button data-sec="instrumentos"><span class="ic">📋</span> Instrumentos</button>
       <button data-sec="enlaces"><span class="ic">🔗</span> Pruebas y enlaces</button>
@@ -257,12 +275,12 @@ async function entrarApp(){
 }
 
 /* ================= NAVEGACIÓN ================= */
-const TITLES={resumen:'Resumen',sesiones:'Sesiones del estudio',participantes:'Participantes',instrumentos:'Instrumentos',enlaces:'Pruebas y enlaces',usuarios:'Usuarios y roles',auditoria:'Auditoría'};
+const TITLES={resumen:'Resumen',sesiones:'Sesiones del estudio',paselista:'Pase de lista · Semáforo emocional',participantes:'Participantes',instrumentos:'Instrumentos',enlaces:'Pruebas y enlaces',usuarios:'Usuarios y roles',auditoria:'Auditoría'};
 function show(sec){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.sec===sec));
   document.getElementById('secTitle').textContent=TITLES[sec];
   const v=document.getElementById('view'); v.innerHTML='<div class="load"><span class="dl"></span> Cargando…</div>';
-  ({resumen:vResumen,sesiones:vSesiones,participantes:vParticipantes,instrumentos:vInstrumentos,enlaces:vEnlaces,usuarios:vUsuarios,auditoria:vAuditoria}[sec])(v)
+  ({resumen:vResumen,sesiones:vSesiones,paselista:vPaselista,participantes:vParticipantes,instrumentos:vInstrumentos,enlaces:vEnlaces,usuarios:vUsuarios,auditoria:vAuditoria}[sec])(v)
     .catch(e=>{v.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`;});
 }
 function destroy(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
@@ -732,6 +750,93 @@ function copiar(id,btn){const inp=document.getElementById(id);const txt=inp.valu
   const done=()=>{const o=btn.textContent;btn.textContent='¡Copiado!';setTimeout(()=>btn.textContent=o,1400);};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{inp.select();document.execCommand('copy');done();});}
   else{inp.select();document.execCommand('copy');done();}
+}
+
+/* ---- Pase de lista · semáforo emocional ---- */
+function faceSVG(m,s=54){const col=['#4bbf73','#8fd14f','#E9B10A','#f0883e','#e0574f'][m];
+  const mouth=['M18 38 Q27 50 36 38','M20 40 Q27 46 34 40','M20 42 H34','M20 44 Q27 38 34 44','M18 46 Q27 34 36 46'][m];
+  const er=m>=3?3.6:2.8;const brow=m>=3?'<path d="M15 20 L23 23 M39 20 L31 23" stroke="#2a2a2a" stroke-width="2" stroke-linecap="round"/>':'';
+  return `<svg viewBox="0 0 54 54" width="${s}" height="${s}"><circle cx="27" cy="27" r="23" fill="${col}"/><circle cx="20" cy="25" r="${er}" fill="#22303f"/><circle cx="34" cy="25" r="${er}" fill="#22303f"/>${brow}<path d="${mouth}" fill="none" stroke="#22303f" stroke-width="3" stroke-linecap="round"/></svg>`;}
+const MOODLBL=['Muy bien','Bien','Normal','Nervioso','Muy mal'];
+const MOODCOL=['#4bbf73','#8fd14f','#E9B10A','#f0883e','#e0574f'];
+const SEMCOL={verde:'#3f9e5a',amarillo:'#E9B10A',rojo:'#e0574f'};
+const moodSem=m=>m<=1?'verde':(m===2?'amarillo':'rojo');
+let PL=null;
+async function vPaselista(v){
+  if(!ROLES.some(r=>['admin','clinico'].includes(r))){v.innerHTML='<div class="disc">Solo personal clínico puede pasar lista.</div>';return;}
+  if(PL&&PL.activo){plBoard(v);return;}
+  plSetup(v);await plRecientes();
+}
+function nameRowHTML(val){return `<div class="pl-row" style="display:flex;gap:8px;margin-bottom:6px"><input class="pl_name" placeholder="Nombre del integrante" value="${esc(val||'')}" style="flex:1;padding:10px;border:1px solid #d7dee6;border-radius:8px;font-size:.9rem"><button class="btn-line" onclick="this.closest('.pl-row').remove()">✕</button></div>`;}
+function plAddName(){document.getElementById('pl_names').insertAdjacentHTML('beforeend',nameRowHTML(''));}
+function plSetup(v){
+  const acts=["Natación / alberca","Danza","Activación física","Manualidades","Exposición","Juego libre"];
+  v.innerHTML=`<div class="disc">Pase de lista rápido con <b>semáforo emocional</b>: cada integrante toca su nombre y elige su carita. Se guarda como registro del estudio. Herramienta de acompañamiento; <b>no constituye diagnóstico</b>.</div>
+   <div class="card">
+     <div class="frow">
+       <div class="fld"><label>Equipo (opcional)</label><input id="pl_team" placeholder="Ej. Equipo A"></div>
+       <div class="fld"><label>Semana</label><input id="pl_week" type="number" min="1" max="3" value="1"></div>
+       <div class="fld"><label>Corte</label><select id="pl_corte"><option>Inicio</option><option>Medio</option><option>Cierre</option></select></div>
+       <div class="fld"><label>Actividad</label><select id="pl_act">${acts.map(a=>`<option>${esc(a)}</option>`).join('')}</select></div>
+     </div>
+     <div class="sec-h">Integrantes del equipo</div>
+     <div id="pl_names">${Array.from({length:5}).map(()=>nameRowHTML('')).join('')}</div>
+     <button class="btn-line" onclick="plAddName()">＋ Agregar integrante</button>
+     <div class="savebar"><button class="btn-sm acc" onclick="plIniciar()">Iniciar pase de lista ▸</button></div>
+   </div>
+   <div class="sec-h" style="margin-top:18px">Pases de lista recientes</div>
+   <div id="pl_recientes"><div class="load"><span class="dl"></span> Cargando…</div></div>`;
+}
+function plIniciar(){
+  const names=[...document.querySelectorAll('.pl_name')].map(i=>i.value.trim()).filter(Boolean);
+  if(!names.length){alert('Escribe al menos un nombre.');return;}
+  PL={activo:true,team_name:val('pl_team'),week:val('pl_week'),corte:val('pl_corte'),activity:val('pl_act'),
+      members:names.map(n=>({name:n,mood:null,semaforo:null}))};
+  plBoard(document.getElementById('view'));
+}
+function plBoard(v){
+  const done=PL.members.filter(m=>m.mood!=null).length;
+  v.innerHTML=`<div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+     <div><b style="color:var(--navy)">${esc(PL.team_name||'Pase de lista')}</b><div class="savehint">Semana ${esc(PL.week||'—')} · ${esc(PL.corte)} · ${esc(PL.activity)}</div></div>
+     <div class="savehint"><b>${done}</b> de <b>${PL.members.length}</b> marcados</div></div>
+   <div class="pl-board">${PL.members.map((m,i)=>plCard(m,i)).join('')}</div>
+   <div class="savebar"><button class="btn-sm acc" id="pl_save" ${done?'':'disabled'} onclick="plGuardar()">Guardar pase de lista</button>
+     <button class="btn-line" onclick="plCancelar()">Cancelar</button></div>`;
+}
+function plCard(m,i){
+  if(m.mood==null)return `<button class="pl-card pend" onclick="plPick(${i})"><div class="pl-nm">${esc(m.name)}</div><div class="pl-st">Toca para marcar</div></button>`;
+  return `<button class="pl-card" style="border-color:${MOODCOL[m.mood]}" onclick="plPick(${i})"><div class="pl-face">${faceSVG(m.mood,46)}</div><div class="pl-nm">${esc(m.name)}</div><div class="pl-lb" style="color:${MOODCOL[m.mood]}">${MOODLBL[m.mood]}</div></button>`;
+}
+function plPick(i){
+  const m=PL.members[i];
+  modal(`<h3>${esc(m.name)}</h3><p class="savehint">¿Cómo te sientes hoy? Elige tu carita.</p>
+   <div class="pl-picker">${[0,1,2,3,4].map(x=>`<button class="pl-opt" onclick="plSet(${i},${x})">${faceSVG(x,50)}<small>${MOODLBL[x]}</small></button>`).join('')}</div>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cerrar</button></div>`);
+}
+function plSet(i,x){PL.members[i].mood=x;PL.members[i].semaforo=moodSem(x);cerrarModal();plBoard(document.getElementById('view'));}
+function plCancelar(){if(!confirm('¿Cancelar este pase de lista? No se guardará.'))return;PL=null;show('paselista');}
+async function plGuardar(){
+  const entries=PL.members.filter(m=>m.mood!=null).map(m=>({name:m.name,mood:m.mood,semaforo:m.semaforo}));
+  if(!entries.length){alert('Marca al menos un integrante.');return;}
+  const btn=document.getElementById('pl_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('rollcall_guardar',{team_name:PL.team_name,week:PL.week,corte:PL.corte,activity:PL.activity,entries});
+    const c={verde:0,amarillo:0,rojo:0};entries.forEach(e=>c[e.semaforo]++);PL=null;
+    const v=document.getElementById('view');
+    v.innerHTML=`<div class="card center"><h2 style="margin:4px 0">Pase de lista guardado ✓</h2>
+      <p class="savehint">${entries.length} integrante(s) registrados como objeto de estudio.</p>
+      <div class="pl-sem" style="justify-content:center;margin-top:8px">${semChip('verde',c.verde)}${semChip('amarillo',c.amarillo)}${semChip('rojo',c.rojo)}</div>
+      <button class="btn-sm acc" style="margin-top:14px" onclick="show('paselista')">Nuevo pase de lista</button></div>`;
+  }catch(e){btn.disabled=false;btn.textContent='Guardar pase de lista';alert('Error: '+e.message);}
+}
+function semChip(kind,n){const lbl={verde:'Verde',amarillo:'Amarillo',rojo:'Rojo'}[kind];return `<span class="sem-chip"><span class="sem-dot" style="background:${SEMCOL[kind]}"></span>${lbl}: <b>${n}</b></span>`;}
+async function plRecientes(){
+  const box=document.getElementById('pl_recientes');if(!box)return;
+  try{const arr=await api('rpc/rollcalls_recientes',{method:'POST',body:{}});
+    box.innerHTML=(arr&&arr.length)?arr.map(r=>{const c={verde:0,amarillo:0,rojo:0};(r.entries||[]).forEach(e=>c[e.semaforo]=(c[e.semaforo]||0)+1);
+      return `<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><b style="color:var(--navy)">${esc(r.team||'Pase de lista')}</b><span class="savehint">${esc(fmtDate(r.created_at))} · Sem ${esc(r.week||'—')} · ${esc(r.corte||'')} · ${esc(r.activity||'')}</span></div>
+        <div class="pl-sem" style="margin-top:8px">${semChip('verde',c.verde)}${semChip('amarillo',c.amarillo)}${semChip('rojo',c.rojo)}</div>
+        <div class="pl-names">${(r.entries||[]).map(e=>`<span class="pl-tag" style="border-color:${SEMCOL[e.semaforo]}">${faceSVG(e.mood,18)}<span>${esc(e.name)}</span></span>`).join('')}</div></div>`;}).join(''):'<div class="empty">Aún no hay pases de lista registrados.</div>';
+  }catch(e){box.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`;}
 }
 
 /* ---- Alta de usuario (solo admin) ---- */
