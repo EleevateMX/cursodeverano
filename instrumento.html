@@ -88,6 +88,17 @@
   .calmbox.hot{background:rgba(63,158,90,.22);border-color:var(--green);color:var(--green);transform:translateX(-50%) scale(1.03)}
   .buddy{position:fixed;width:60px;height:60px;bottom:120px;right:16px;z-index:30;filter:drop-shadow(0 6px 10px rgba(31,56,100,.22));animation:float 1.8s ease-in-out infinite alternate}
   .buddy.dragging{animation:none}
+  /* ===== termómetro de emociones ===== */
+  .thermwrap{display:flex;gap:16px;align-items:center;justify-content:center;margin:14px 0 6px}
+  .th-side{display:flex;flex-direction:column;justify-content:space-between;height:220px;font-size:.7rem;font-weight:800;color:var(--muted);text-align:right}
+  .thermo{position:relative;width:56px;height:220px;border-radius:28px;background:#eef4fb;border:3px solid #cfe0f2;overflow:hidden;box-shadow:inset 0 2px 8px rgba(31,56,100,.1)}
+  .th-fill{position:absolute;left:0;right:0;bottom:0;height:0;background:#4bbf73;transition:height .1s,background .1s}
+  .th-knob{position:absolute;left:8px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:50%;box-shadow:0 3px 9px rgba(31,56,100,.28);z-index:2}
+  .th-read{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:96px}
+  .th-lbl{font-weight:800;font-size:1rem}
+  /* ===== recompensas ===== */
+  .spark{position:fixed;z-index:60;pointer-events:none;transition:transform .55s ease,opacity .55s ease}
+  .confg{position:fixed;width:9px;height:14px;border-radius:2px;z-index:60;pointer-events:none}
 </style>
 </head>
 <body>
@@ -153,6 +164,23 @@ function makeDrag(node,opts){
 }
 function overZone(e,zone){if(!zone)return false;const r=zone.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;}
 const CHEERS=['¡Muy bien!','¡Vas genial!','¡Qué bien lo haces!','¡Sigue así!','¡Eres valiente!'];
+/* ===== recompensas visuales/sonoras (suaves, no afectan el puntaje) ===== */
+const SPARKC=['#E9B10A','#4bbf73','#4a90d9','#e0679a','#7c4dbd'];
+function sparkle(x,y,n=8){for(let i=0;i<n;i++){const s=el(`<div class="spark">${starSVG(14,SPARKC[i%SPARKC.length])}</div>`);document.body.appendChild(s);
+  s.style.left=x+'px';s.style.top=y+'px';const a=Math.random()*6.28,d=26+Math.random()*40;
+  requestAnimationFrame(()=>{s.style.transform=`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`;s.style.opacity='0';});
+  setTimeout(()=>s.remove(),600);}}
+function confetti(n=26){for(let i=0;i<n;i++){const c=el('<div class="confg"></div>');c.style.background=SPARKC[i%SPARKC.length];
+  c.style.left=(20+Math.random()*60)+'vw';c.style.top='-20px';document.body.appendChild(c);
+  const dx=(Math.random()*2-1)*90,dy=window.innerHeight*0.72+Math.random()*120;
+  requestAnimationFrame(()=>{c.style.transition='transform 1.1s ease-in,opacity 1.1s';c.style.transform=`translate(${dx}px,${dy}px) rotate(${Math.random()*720}deg)`;c.style.opacity='0';});
+  setTimeout(()=>c.remove(),1200);}}
+let AC=null;
+function chime(freq=880){if(!sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();
+  o.type='sine';o.frequency.value=freq;o.connect(g);g.connect(AC.destination);const t=AC.currentTime;
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.14,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.34);
+  o.start(t);o.stop(t+.35);}catch(e){}}
+function centerOf(node){const r=node.getBoundingClientRect();return[r.left+r.width/2,r.top+r.height/2];}
 
 /* ===== BANDS (protocolo: 6-7, 8-9, 10-11, 12-13, 14) ===== */
 const ACC_KID=[{id:'acerco',t:'Me acerco y participo',c:'#3f9e5a'},{id:'miro',t:'Me quedo mirando',c:'#4a90d9'},{id:'escondo',t:'Me alejo o me escondo',c:'#e0574f'},{id:'adulto',t:'Busco a un adulto',c:'#7c4dbd'}];
@@ -245,16 +273,35 @@ function menu(){
     if(bud)makeDrag(bud,{onEnd:(e,moved)=>{if(moved<8){bud.style.animation='wiggle .5s ease';speak(CHEERS[Math.floor(Math.random()*CHEERS.length)]);setTimeout(()=>bud.style.animation='float 1.8s ease-in-out infinite alternate',520);}}});}
 }
 function launch(k){MODEFS[k].run();}
-function finish(k){S.done[k]=true;menu();}
+function finish(k){S.done[k]=true;if(S.edad<12){confetti();chime(784);toast('¡Actividad completada! ⭐');}menu();}
 
 /* ===== CHECK-IN (caras tras la actividad / slider en grandes) ===== */
 function m_checkin(){S.data.checkin={};S.edad>=12?ck_slider():ck_face();}
 function ck_face(){
-  const q=`¿Cómo te sentiste en ${S.actividad.toLowerCase()} hoy?`;
+  const q=`¿Cómo te sentiste en ${S.actividad.toLowerCase()} hoy? Sube o baja al ayudante en el termómetro.`;
+  const LBL=['Muy bien','Bien','Normal','Nervioso','Muy mal'],COL=['#4bbf73','#8fd14f','#E9B10A','#f0883e','#e0574f'];
   app.innerHTML=`<div class="screen">${head('¿Cómo me sentí?')}
-    <div class="card">${P(q)}<div class="faces" id="f">${[0,1,2,3,4].map(i=>`<div class="face" data-v="${i}">${faceSVG(i,46)}<small>${['Muy bien','Bien','Normal','Nervioso','Muy mal'][i]}</small></div>`).join('')}</div></div>
+    <div class="card">${P(q)}
+      <div class="thermwrap">
+        <div class="th-side"><span>Muy<br>mal</span><span>Normal</span><span>Muy<br>bien</span></div>
+        <div class="thermo" id="th"><div class="th-fill" id="thfill"></div><div class="th-knob draggable" id="thknob">${mascot(38)}</div></div>
+        <div class="th-read"><div id="thface">${faceSVG(2,72)}</div><div class="th-lbl" id="thlbl" style="color:var(--muted)">Muévelo</div></div>
+      </div>
+      <p class="muted" style="font-size:.76rem;text-align:center;margin-top:2px">Arrastra al ayudante o toca el termómetro.</p></div>
     <div class="foot"><button class="btn btn-primary" id="nx" disabled onclick="ck_reasons()">Siguiente</button></div></div>`;
-  bindFaces('f',v=>{S.data.termo_inicio=v;document.getElementById('nx').disabled=false;});autoRead(q);
+  const tube=document.getElementById('th'),knob=document.getElementById('thknob'),fill=document.getElementById('thfill'),
+        faceB=document.getElementById('thface'),lbl=document.getElementById('thlbl');
+  const K=40,H=tube.clientHeight,MAX=H-K;let lastV=-1;
+  const setFromTop=top=>{top=Math.max(0,Math.min(MAX,top));knob.style.top=top+'px';knob.style.left='8px';
+    const v=Math.round((1-top/MAX)*4);S.data.termo_inicio=v;
+    fill.style.height=(H-top-K/2)+'px';fill.style.background=COL[v];
+    faceB.innerHTML=faceSVG(v,72);lbl.textContent=LBL[v];lbl.style.color=COL[v];
+    document.getElementById('nx').disabled=false;
+    if(v!==lastV){lastV=v;const[cx,cy]=centerOf(knob);sparkle(cx,cy,5);chime(760+v*70);}};
+  knob.style.top=MAX+'px';knob.style.left='8px';
+  makeDrag(knob,{area:tube,onMove:()=>setFromTop(parseFloat(knob.style.top)||0),onEnd:()=>speak(lbl.textContent)});
+  tube.addEventListener('pointerdown',e=>{if(e.target.closest('.th-knob'))return;const r=tube.getBoundingClientRect();setFromTop(e.clientY-r.top-K/2);speak(lbl.textContent);});
+  autoRead(q);
 }
 function ck_slider(){
   const q=`Del 0 (tranquilo) al 10, ¿qué tan nervioso/a te sentiste en ${S.actividad.toLowerCase()}?`;
@@ -330,7 +377,7 @@ function atStart(){
   const spawn=setInterval(()=>{const good=Math.random()<0.72;if(good)g.targets++;const born=Date.now();
     const inner=teen?dotSVG(52,good?'#4bbf73':'#e0574f'):(good?starSVG(52):cloudSVG(52));
     const t=el(`<div class="target">${inner}</div>`);t.style.left=Math.random()*(area.clientWidth-60)+'px';t.style.top=Math.random()*(area.clientHeight-60)+'px';
-    let alive=true;t.onclick=()=>{if(!alive)return;alive=false;if(good){g.hit++;g.rts.push(Date.now()-born);document.getElementById('hit').textContent=g.hit;}else{g.err++;}t.style.opacity=.3;setTimeout(()=>t.remove(),140);};
+    let alive=true;t.onclick=()=>{if(!alive)return;alive=false;if(good){g.hit++;g.rts.push(Date.now()-born);document.getElementById('hit').textContent=g.hit;const[cx,cy]=centerOf(t);sparkle(cx,cy,5);chime(1046);}else{g.err++;}t.style.opacity=.3;setTimeout(()=>t.remove(),140);};
     area.appendChild(t);atmr.push(setTimeout(()=>{if(alive){alive=false;if(good)g.miss++;t.remove();}},teen?1000:1200));
   },teen?720:820);
   atmr.push(tick,spawn);
@@ -357,8 +404,8 @@ function glo_pop(){
       <p class="muted" style="font-size:.76rem;text-align:center;margin-top:6px">Tip: también puedes tocar un globo para soltarlo.</p></div>
     <div class="foot"><button class="btn btn-primary" onclick="glo_breathe()">Siguiente</button></div></div>`;
   const area=document.getElementById('pa'),calm=document.getElementById('calm');let left=sel.length;
-  const absorb=b=>{if(!b||b.__gone)return;b.__gone=true;calm.classList.remove('hot');b.style.animation='absorb .42s ease forwards';speak('Muy bien');
-    setTimeout(()=>b.remove(),420);if(--left<=0){document.getElementById('allpop').classList.remove('hidden');speak('¡Muy bien!');}};
+  const absorb=b=>{if(!b||b.__gone)return;b.__gone=true;calm.classList.remove('hot');const[cx,cy]=centerOf(b);sparkle(cx,cy,6);chime(880);b.style.animation='absorb .42s ease forwards';speak('Muy bien');
+    setTimeout(()=>b.remove(),420);if(--left<=0){document.getElementById('allpop').classList.remove('hidden');confetti();speak('¡Muy bien!');}};
   document.querySelectorAll('#pa .balloon').forEach(b=>makeDrag(b,{area,
     onMove:e=>calm.classList.toggle('hot',overZone(e,calm)),
     onEnd:(e,moved)=>{if(overZone(e,calm)||moved<8)absorb(b);else calm.classList.remove('hot');}}));
@@ -389,7 +436,7 @@ function m_memorama(){
     if(lock||card.classList.contains('flip')||card.classList.contains('matched'))return;
     card.classList.add('flip');card.innerHTML=icon(card.dataset.k,30,cols[card.dataset.k]);flip.push(card);
     if(flip.length===2){lock=true;S.data.memorama.moves++;document.getElementById('mv').textContent=S.data.memorama.moves;const[a,b]=flip;
-      if(a.dataset.k===b.dataset.k){setTimeout(()=>{a.classList.add('matched');b.classList.add('matched');a.classList.remove('flip');b.classList.remove('flip');matched++;document.getElementById('pairs').textContent=matched;flip=[];lock=false;if(matched===6){S.data.memorama.dur=Math.round((Date.now()-S.data.memorama.t0)/1000);document.getElementById('nx').classList.remove('hidden');}},420);}
+      if(a.dataset.k===b.dataset.k){const[cx,cy]=centerOf(b);sparkle(cx,cy,7);chime(990);setTimeout(()=>{a.classList.add('matched');b.classList.add('matched');a.classList.remove('flip');b.classList.remove('flip');matched++;document.getElementById('pairs').textContent=matched;flip=[];lock=false;if(matched===6){S.data.memorama.dur=Math.round((Date.now()-S.data.memorama.t0)/1000);document.getElementById('nx').classList.remove('hidden');confetti();}},420);}
       else{S.data.memorama.errores++;setTimeout(()=>{a.classList.remove('flip');b.classList.remove('flip');a.innerHTML='';b.innerHTML='';flip=[];lock=false;},720);}}
   });autoRead(q);
 }
