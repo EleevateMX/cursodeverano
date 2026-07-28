@@ -2,491 +2,723 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#2E5496">
-<title>Ansiedad social · Curso de verano · Instrumento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3864">
+<title>Panel de administración · Ansiedad social · SNTSS VI</title>
+<script src="chart.umd.js"></script>
 <style>
   :root{--navy:#1F3864;--blue:#2E5496;--sky:#4a90d9;--light:#EAF0F8;--accent:#C55A11;--green:#3f9e5a;
-    --purple:#7c4dbd;--red:#d9534f;--pink:#e0679a;--teal:#159a9c;--gold:#E9B10A;
-    --ink:#22303f;--muted:#6b7a8d;--bg:#f4f7fc;--card:#ffffff;--shadow:0 8px 24px rgba(31,56,100,.12)}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);overscroll-behavior:none}
-  body.teen{--bg:#0f1830;--card:#182238;--ink:#eaf0fb;--muted:#9fb0c9;--light:#243350;--blue:#4f8cff;--navy:#cfe0ff;--accent:#ff8a3d;--shadow:0 8px 24px rgba(0,0,0,.35)}
-  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:16px 16px 28px;position:relative}
-  .screen{animation:fade .3s ease;flex:1;display:flex;flex-direction:column}
-  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-  @keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
-  @keyframes float{0%{transform:translateY(0)}100%{transform:translateY(-14px)}}
-  @keyframes rise{from{transform:translateY(20px) scale(.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-  h1{font-size:1.45rem;margin:.2em 0}h2{font-size:1.2rem;margin:.3em 0;color:var(--navy);line-height:1.25}
-  p{line-height:1.5}.muted{color:var(--muted)}.center{text-align:center}
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px}
-  .brand{font-weight:800;color:var(--blue);font-size:.92rem;display:flex;align-items:center;gap:6px}
-  .badge{background:var(--light);color:var(--navy);font-size:.7rem;font-weight:700;padding:4px 9px;border-radius:20px;white-space:nowrap}
-  .card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:18px;margin:10px 0}
-  body.teen .card{border:1px solid #22314f}
-  .prompt{display:flex;align-items:flex-start;gap:10px}.prompt h2{flex:1}
-  .btn{display:block;width:100%;border:none;border-radius:16px;padding:16px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:transform .08s,box-shadow .15s;font-family:inherit}
-  .btn:active{transform:scale(.97)}.btn:disabled{opacity:.45}
-  .btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px rgba(46,84,150,.35)}
-  .btn-ghost{background:transparent;color:var(--blue);border:2px solid var(--light)}
-  .btn-lg{padding:20px;font-size:1.15rem}
-  .speaker{background:var(--light);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-  .speaker:active{transform:scale(.9)}
-  .grid{display:grid;gap:12px}.grid-2{grid-template-columns:1fr 1fr}
-  .opt{background:var(--card);border:2px solid var(--light);border-radius:16px;padding:14px 12px;cursor:pointer;font-weight:700;color:var(--ink);transition:.12s;display:flex;align-items:center;gap:12px;font-family:inherit;font-size:1rem}
-  .opt:active{transform:scale(.96)}.opt.sel{border-color:var(--blue);background:rgba(46,84,150,.10);box-shadow:0 0 0 3px rgba(46,84,150,.15)}
-  .chip{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff}
-  .faces{display:flex;justify-content:space-between;gap:6px}
-  .face{flex:1;background:var(--card);border:2px solid var(--light);border-radius:16px;padding:8px 2px;cursor:pointer;transition:.12s;display:flex;flex-direction:column;align-items:center;gap:2px}
-  .face small{font-size:.6rem;color:var(--muted);font-weight:700;text-align:center;line-height:1.05}
-  .face:active{transform:scale(.92)}.face.sel{border-color:var(--accent);box-shadow:0 0 0 3px rgba(197,90,17,.18)}
-  .dots{display:flex;gap:6px;justify-content:center;margin:2px 0 8px}
-  .dot{width:8px;height:8px;border-radius:50%;background:#cfdcee}.dot.on{background:var(--blue);width:22px;border-radius:6px}
-  .field{margin:10px 0}.field label{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--navy)}
-  .field input,.field select,.field textarea{width:100%;padding:13px;border:2px solid var(--light);border-radius:12px;font-size:1rem;font-family:inherit;background:var(--card);color:var(--ink)}
-  .foot{margin-top:auto}.row{display:flex;gap:10px}.row .btn{margin:0}
-  .scene{display:flex;justify-content:center;margin:6px 0 2px}
-  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .tile{border:none;border-radius:22px;padding:16px 12px;color:#fff;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:800;font-size:.95rem;position:relative;box-shadow:var(--shadow);animation:rise .35s ease;min-height:118px;justify-content:center;text-align:center}
-  .tile:active{transform:scale(.96)}
-  .tile .chk{position:absolute;top:8px;right:10px;background:rgba(255,255,255,.28);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
-  .tile.done{filter:saturate(.7) brightness(.95)}
-  body.teen .tile{border-radius:16px;background:var(--card)!important;border:1px solid #2b3c5e;color:var(--ink);min-height:100px}
-  body.teen .tile .ic{color:var(--blue)}
-  #playArea{position:relative;height:320px;background:linear-gradient(160deg,#eaf4ff,#dfeeff);border-radius:20px;overflow:hidden;box-shadow:inset 0 2px 10px rgba(31,56,100,.08)}
-  body.teen #playArea{background:linear-gradient(160deg,#12203c,#0c1730)}
-  .target{position:absolute;cursor:pointer;user-select:none;animation:pop .2s ease;width:60px;height:60px;display:flex;align-items:center;justify-content:center}
-  .gamehud{display:flex;justify-content:space-between;font-weight:800;color:var(--navy);margin:6px 2px}
-  .balloon{position:relative;border-radius:50% 50% 48% 48%;padding:18px 10px;color:#fff;font-weight:800;font-size:.9rem;text-align:center;cursor:pointer;box-shadow:var(--shadow);transition:.12s;min-height:82px;display:flex;align-items:center;justify-content:center}
-  .balloon:active{transform:scale(.94)}.balloon.sel{outline:4px solid rgba(255,255,255,.7);transform:scale(1.03)}
-  .breathe{width:150px;height:150px;border-radius:50%;margin:16px auto;background:radial-gradient(circle at 40% 35%,#8fd3ff,#2E5496);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem;transition:transform 4s ease-in-out}
-  .mem{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-  .mcard{aspect-ratio:1/1;border-radius:14px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--blue);transition:.15s;font-family:inherit;padding:0}
-  .mcard.flip{background:var(--card);border:2px solid var(--light)}.mcard.matched{background:rgba(63,158,90,.18);border:2px solid var(--green)}
-  input[type=range]{width:100%;accent-color:var(--blue)}
-  .bar{height:16px;border-radius:10px;background:var(--light);overflow:hidden;margin-top:6px}.bar>i{display:block;height:100%;border-radius:10px}
-  .metric{margin:12px 0}.metric .mh{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem}
-  .foco{border:2px solid var(--accent)!important}
-  .ethics{font-size:.75rem;color:var(--muted);background:rgba(233,177,10,.10);border:1px solid rgba(233,177,10,.35);border-radius:12px;padding:10px 12px;margin-top:12px;line-height:1.45}
-  .rate{display:flex;gap:6px;margin-top:6px}
-  .rate button{flex:1;border:2px solid var(--light);background:var(--card);border-radius:12px;padding:11px 0;font-weight:800;font-size:.8rem;cursor:pointer;color:var(--ink);font-family:inherit}
-  .rate button.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
-  .link{background:none;border:none;color:var(--blue);font-weight:700;text-decoration:underline;cursor:pointer;font-size:.9rem;font-family:inherit}
-  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;box-shadow:var(--shadow);z-index:99;max-width:90%;text-align:center}
-  body.teen .toast{background:#0b1220;border:1px solid #2b3c5e}
+    --purple:#7c4dbd;--red:#d9534f;--gold:#E9B10A;--teal:#159a9c;
+    --ink:#22303f;--muted:#6b7a8d;--bg:#f4f7fc;--card:#fff;--line:#dfe7f2;--shadow:0 8px 24px rgba(31,56,100,.10)}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  a{color:var(--blue)}
+  /* ===== Login ===== */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#eef3fb,#e2ebf8)}
+  .lcard{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:26px;max-width:390px;width:100%}
+  .lcard h1{font-size:1.25rem;margin:.2em 0 0;color:var(--navy)}
+  .lcard p.sub{font-size:.85rem;color:var(--muted);margin:.3em 0 16px}
+  .field{margin:10px 0}
+  .field label{display:block;font-weight:700;font-size:.8rem;margin-bottom:6px;color:var(--navy)}
+  .field input{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:1rem;font-family:inherit}
+  .field input:focus{outline:2px solid var(--sky)}
+  .btn{display:block;width:100%;border:none;border-radius:12px;padding:13px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.1s}
+  .btn:active{transform:scale(.98)} .btn:disabled{opacity:.5}
+  .btn-p{background:var(--blue);color:#fff}
+  .msg{font-size:.82rem;font-weight:700;margin-top:10px;display:none}
+  .msg.err{color:var(--red);display:block} .msg.ok{color:var(--green);display:block}
+  .brandrow{display:flex;align-items:center;gap:10px}
+  .logo{width:40px;height:40px;border-radius:11px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+  /* ===== App shell ===== */
+  #app{display:none;grid-template-columns:230px 1fr;min-height:100vh}
+  aside{background:var(--navy);color:#dfe8f7;padding:16px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+  aside .top{display:flex;align-items:center;gap:10px;padding:6px 8px 14px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:8px}
+  aside .top b{font-size:.95rem;color:#fff}
+  aside .top small{display:block;color:#9fb6da;font-size:.7rem}
+  nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:#cdddf5;
+    padding:11px 12px;border-radius:10px;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  nav button:hover{background:rgba(255,255,255,.08)}
+  nav button.active{background:var(--blue);color:#fff}
+  nav button .ic{width:18px;height:18px;flex:0 0 18px}
+  aside .foot{margin-top:auto;font-size:.72rem;color:#9fb6da;padding:8px}
+  main{padding:20px 24px 48px;overflow:auto}
+  header.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px}
+  header.bar h2{margin:0;font-size:1.3rem;color:var(--navy)}
+  .who{display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--muted)}
+  .who b{color:var(--ink)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.7rem;font-weight:800;color:#fff}
+  .btn-sm{padding:8px 12px;border:1.5px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .btn-sm.acc{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .disc{font-size:.72rem;color:#8a6d1f;background:rgba(233,177,10,.12);border:1px solid rgba(233,177,10,.4);border-radius:10px;padding:8px 12px;margin:10px 0}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:12px 0}
+  .kpi{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;border-top:4px solid var(--blue)}
+  .kpi .v{font-size:1.7rem;font-weight:800;color:var(--navy)}
+  .kpi .l{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .kpi.foco{border-top-color:var(--accent)} .kpi.ok{border-top-color:var(--green)} .kpi.warn{border-top-color:var(--red)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+  .card h3{margin:0 0 2px;font-size:.95rem;color:var(--navy)}
+  .card .s{font-size:.74rem;color:var(--muted);margin:0 0 10px}
+  .chartbox{position:relative;height:250px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px;align-items:center}
+  .toolbar select,.toolbar input{padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.83rem;font-weight:600;color:var(--ink);background:#fff}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{text-align:left;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--line);padding:8px}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:hover td{background:#f7faff}
+  .num{font-variant-numeric:tabular-nums;font-weight:700}
+  .empty{padding:36px;text-align:center;color:var(--muted)} .empty b{color:var(--navy)}
+  .load{display:flex;gap:10px;align-items:center;color:var(--muted);font-weight:700;padding:24px;justify-content:center}
+  .dl{width:9px;height:9px;border-radius:50%;background:var(--blue);animation:b 1s infinite alternate}@keyframes b{to{transform:translateY(-6px);opacity:.4}}
   .hidden{display:none!important}
-  .back{background:none;border:none;color:var(--blue);font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;padding:4px 0}
+  .tag{font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:10px;background:var(--light);color:var(--navy)}
+  .rolechip{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:10px;color:#fff;margin-right:4px}
+  /* ===== Modal / formularios / ficha ===== */
+  .modalbg{position:fixed;inset:0;background:rgba(20,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:24px;z-index:60;overflow:auto}
+  .modal{background:#fff;border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:640px;padding:20px}
+  .modal h3{margin:0 0 4px;color:var(--navy)}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.frow{grid-template-columns:1fr}}
+  .fld{margin:8px 0}
+  .fld label{display:block;font-weight:700;font-size:.76rem;color:var(--navy);margin-bottom:4px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.9rem;color:var(--ink);background:#fff}
+  .fld textarea{min-height:64px;resize:vertical}
+  .modact{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+  .btn-line{background:#fff;border:1.5px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;font-family:inherit}
+  .link-row{cursor:pointer}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+  .tabs button{border:none;background:var(--light);color:var(--navy);border-radius:9px;padding:8px 12px;font-weight:700;font-size:.83rem;cursor:pointer;font-family:inherit}
+  .tabs button.on{background:var(--blue);color:#fff}
+  .sec-h{font-weight:800;color:var(--navy);font-size:.9rem;margin:14px 0 4px}
+  .noeval{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--muted);font-weight:700;margin-top:4px}
+  .signed{background:rgba(63,158,90,.12);border:1px solid rgba(63,158,90,.4);border-radius:8px;padding:2px 8px;font-size:.7rem;font-weight:800;color:#2c6e3f}
+  .draft{background:rgba(233,177,10,.15);border:1px solid rgba(233,177,10,.5);border-radius:8px;padding:2px 8px;font-size:.7rem;font-weight:800;color:#8a6d1f}
+  .savebar{position:sticky;bottom:0;background:linear-gradient(0deg,#fff,#fff 70%,transparent);padding:12px 0;display:flex;gap:10px;align-items:center}
+  .savehint{font-size:.75rem;color:var(--muted)}
+  .fieldlinks{margin-top:16px;border-top:1px solid #e3e9ef;padding-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.8rem}
+  .fieldlinks span{color:var(--muted);font-weight:700}
+  .fieldlinks a{color:var(--blue);font-weight:700;text-decoration:none;background:var(--light);padding:6px 10px;border-radius:8px}
+  .fieldlinks a:hover{background:#e7eef5}
+  .ralert{background:rgba(214,64,64,.1);border:1px solid rgba(214,64,64,.45);border-radius:10px;padding:12px 14px;font-size:.86rem;color:#8a2b2b;font-weight:600;margin-bottom:12px}
+  .rchip{display:inline-block;border-radius:8px;padding:3px 9px;font-size:.76rem;font-weight:700;border:1px solid #d7dee6;background:#f3f6f9;color:var(--navy)}
+  .rchip.lv-bajo{background:rgba(63,158,90,.12);border-color:rgba(63,158,90,.4);color:#2c6e3f}
+  .rchip.lv-moderado{background:rgba(233,177,10,.15);border-color:rgba(233,177,10,.5);color:#8a6d1f}
+  .rchip.lv-alto{background:rgba(214,64,64,.14);border-color:rgba(214,64,64,.5);color:#8a2b2b}
+  /* ---- Reporte imprimible ---- */
+  .rep-doc{background:#fff;border:1px solid #e3e9ef;border-radius:12px;padding:26px;margin-top:12px;color:#1c2733;font-size:.86rem;line-height:1.5}
+  .rep-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--navy);padding-bottom:10px;gap:12px}
+  .rep-org{font-weight:800;color:var(--navy);font-size:1rem}
+  .rep-sub{color:var(--muted);font-size:.82rem}
+  .rep-meta{text-align:right;font-size:.8rem;color:var(--muted)}
+  .rep-disc{background:#f6f9fc;border:1px solid #dbe4ec;border-radius:8px;padding:10px 12px;font-size:.78rem;color:#41505f;margin:12px 0}
+  .rep-h2{color:var(--navy);font-size:1rem;border-bottom:1px solid #e3e9ef;padding-bottom:4px;margin:20px 0 8px}
+  .rep-tbl{width:100%;border-collapse:collapse}
+  .rep-tbl th{text-align:left;vertical-align:top;width:34%;padding:6px 8px;background:#f6f9fc;border:1px solid #e3e9ef;font-weight:700;color:var(--navy)}
+  .rep-tbl td{padding:6px 8px;border:1px solid #e3e9ef;white-space:pre-wrap}
+  .rep-enc{border:1px solid #e3e9ef;border-radius:8px;padding:10px 12px;margin-top:8px}
+  .rep-obj{color:var(--muted);font-size:.8rem}
+  .rep-add{margin-top:6px;padding:7px 9px;border-left:3px solid var(--gold,#e9b10a);background:#fffdf5;font-size:.8rem}
+  .rep-empty,.rep-note{color:var(--muted);font-size:.82rem;font-style:italic}
+  .rep-foot{margin-top:22px;border-top:1px solid #e3e9ef;padding-top:8px;color:var(--muted);font-size:.72rem}
+  @media print{
+    body.printing *{visibility:hidden!important}
+    body.printing #repDoc,body.printing #repDoc *{visibility:visible!important}
+    body.printing #repDoc{position:absolute;left:0;top:0;width:100%;border:none;margin:0;padding:0}
+    body.printing .rep-enc,body.printing .rep-tbl tr{page-break-inside:avoid}
+  }
 </style>
 </head>
 <body>
-<div id="app"></div>
-<script>
-/* ===== CONFIG ===== */
-const CONFIG={SB_URL:"https://sclqzavebwinezpivmwr.supabase.co",CAP_FN:"https://sclqzavebwinezpivmwr.supabase.co/functions/v1/captura"};
-// Fase 2: la escritura anónima directa fue eliminada; todo pasa por la función
-// "captura" que valida una clave de aplicación y sanea el payload en el servidor.
-const NINOS=[{codigo:"N-01",nombre:"Mathias",edad:6},{codigo:"N-02",nombre:"Alexander Leonardo",edad:6}];
-const ACTIVIDADES=["Natación / alberca","Danza","Activación física","Manualidades","Exposición","Juego libre"];
-let S=null,sound=true;
-const app=document.getElementById('app');
-const clamp=(x,a=0,b=100)=>Math.max(a,Math.min(b,x));
-const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
-
-/* ===== SVG ===== */
-function faceSVG(m,s=54){const col=['#4bbf73','#8fd14f','#E9B10A','#f0883e','#e0574f'][m];
-  const mouth=['M18 38 Q27 50 36 38','M20 40 Q27 46 34 40','M20 42 H34','M20 44 Q27 38 34 44','M18 46 Q27 34 36 46'][m];
-  const er=m>=3?3.6:2.8;const brow=m>=3?'<path d="M15 20 L23 23 M39 20 L31 23" stroke="#2a2a2a" stroke-width="2" stroke-linecap="round"/>':'';
-  return `<svg viewBox="0 0 54 54" width="${s}" height="${s}"><circle cx="27" cy="27" r="23" fill="${col}"/><circle cx="20" cy="25" r="${er}" fill="#22303f"/><circle cx="34" cy="25" r="${er}" fill="#22303f"/>${brow}<path d="${mouth}" fill="none" stroke="#22303f" stroke-width="3" stroke-linecap="round"/></svg>`;}
-function mascot(s=96){return `<svg viewBox="0 0 120 120" width="${s}" height="${s}"><path d="M60 10 l13 27 30 4 -22 21 6 30 -27 -15 -27 15 6 -30 -22 -21 30 -4z" fill="#E9B10A" stroke="#c8930a" stroke-width="3" stroke-linejoin="round"/><circle cx="51" cy="57" r="4" fill="#22303f"/><circle cx="69" cy="57" r="4" fill="#22303f"/><path d="M50 68 Q60 78 70 68" fill="none" stroke="#22303f" stroke-width="3" stroke-linecap="round"/><circle cx="44" cy="65" r="4" fill="#ff9db0" opacity=".7"/><circle cx="76" cy="65" r="4" fill="#ff9db0" opacity=".7"/></svg>`;}
-function starSVG(s,c='#E9B10A'){return `<svg viewBox="0 0 24 24" width="${s}" height="${s}"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" fill="${c}"/></svg>`;}
-function cloudSVG(s,c='#9aa7b6'){return `<svg viewBox="0 0 24 24" width="${s}" height="${s}"><path d="M6 18h11a4 4 0 0 0 .5-8 6 6 0 0 0-11.4-1A4 4 0 0 0 6 18z" fill="${c}"/></svg>`;}
-function dotSVG(s,c){return `<svg viewBox="0 0 24 24" width="${s}" height="${s}"><circle cx="12" cy="12" r="9" fill="${c}"/></svg>`;}
-const GLYPH={heart:'M12 20s-6.5-4.2-9-8C1.3 9 2.6 5.8 5.8 5.8c1.8 0 3 .9 3.7 1.9.7-1 1.9-1.9 3.7-1.9 3.2 0 4.5 3.2 2.8 6.2-2.5 3.8-9 8-9 8H12z',book:'M5 5c2-.8 5-.8 7 .2v13c-2-1-5-1-7-.2V5zm14 0c-2-.8-5-.8-7 .2v13c2-1 5-1 7-.2V5z',target:'M12 3a9 9 0 100 18 9 9 0 000-18zm0 4a5 5 0 100 10 5 5 0 000-10zm0 3a2 2 0 100 4 2 2 0 000-4z',balloon:'M12 3a5 5 0 00-5 5c0 3 2.5 5.5 5 6 2.5-.5 5-3 5-6a5 5 0 00-5-5zm-.7 14h1.4l.6 3h-2.6z',cards:'M4 6h9v12H4zM15 8h5v10h-5z',list:'M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z',shield:'M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6z',people:'M8 11a3 3 0 100-6 3 3 0 000 6zm8 0a3 3 0 100-6 3 3 0 000 6zM2 19c0-3 4-4 6-4s6 1 6 4v1H2zm12 1v-1c0-1.7-.9-2.9-2.2-3.7 1-.2 2-.3 2.2-.3 2 0 6 1 6 4v1z',check:'M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.5z',star:'M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.6 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z',moon:'M13 3a9 9 0 108 13A7 7 0 0113 3z',sun:'M12 9a3 3 0 100 6 3 3 0 000-6zM12 3v3m0 12v3M3 12h3m12 0h3M6 6l2 2m8 8l2 2M6 18l2-2m8-8l2-2',flower:'M12 8a3 3 0 100 6 3 3 0 000-6zm0-5c1.5 0 2 2 2 3s-.5 2-2 2-2-1-2-2 .5-3 2-3zm0 18c1.5 0 2-2 2-3s-.5-2-2-2-2 1-2 2 .5 3 2 3zM3 12c0-1.5 2-2 3-2s2 .5 2 2-1 2-2 2-3-.5-3-2zm18 0c0 1.5-2 2-3 2s-2-.5-2-2 1-2 2-2 3 .5 3 2z',cloud:'M6 18h11a4 4 0 00.5-8 6 6 0 00-11.4-1A4 4 0 006 18z'};
-function icon(n,s=24,c='currentColor'){return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="${c}"><path d="${GLYPH[n]||''}"/></svg>`;}
-const SPK='<svg viewBox="0 0 24 24" width="22" height="22" fill="#2E5496"><path d="M4 9v6h4l5 5V4L8 9H4zm12 3a4 4 0 00-2-3.5v7A4 4 0 0016 12z"/></svg>';
-
-/* ===== TTS ===== */
-function speak(t){if(!sound||!('speechSynthesis'in window)||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='es-MX';u.rate=.96;u.pitch=1.03;const v=speechSynthesis.getVoices().find(v=>/es(-|_)MX/i.test(v.lang))||speechSynthesis.getVoices().find(v=>/^es/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
-if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=()=>{};}
-function autoRead(t){setTimeout(()=>speak(t),300);}
-
-/* ===== HELPERS ===== */
-function el(h){const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild;}
-function P(text){return `<div class="prompt"><h2>${text}</h2><button class="speaker" onclick="speak(${JSON.stringify(text).replace(/"/g,'&quot;')})">${SPK}</button></div>`;}
-function toast(m,ms=2200){const t=el(`<div class="toast">${m}</div>`);document.body.appendChild(t);setTimeout(()=>t.remove(),ms);}
-function dots(i,n){let d='<div class="dots">';for(let k=0;k<n;k++)d+=`<span class="dot ${k<=i?'on':''}"></span>`;return d+'</div>';}
-function head(title){return `<div class="topbar"><button class="back" onclick="menu()">‹ Menú</button><span class="badge">${title}</span></div>`;}
-
-/* ===== BANDS (protocolo: 6-7, 8-9, 10-11, 12-13, 14) ===== */
-const ACC_KID=[{id:'acerco',t:'Me acerco y participo',c:'#3f9e5a'},{id:'miro',t:'Me quedo mirando',c:'#4a90d9'},{id:'escondo',t:'Me alejo o me escondo',c:'#e0574f'},{id:'adulto',t:'Busco a un adulto',c:'#7c4dbd'}];
-const ACC_TEEN=[{id:'acerco',t:'Me integro y participo',c:'#4bbf73'},{id:'miro',t:'Observo de lejos',c:'#4f8cff'},{id:'escondo',t:'Lo evito',c:'#e0574f'},{id:'adulto',t:'Busco a alguien de confianza',c:'#a06cff'}];
-const REASONS_KID=[{id:'casa',t:'Algo en casa',c:'#e0679a'},{id:'amigos',t:'Los amigos',c:'#4a90d9'},{id:'actividad',t:'La actividad de hoy',c:'#C55A11'},{id:'sueno',t:'Dormí poco',c:'#7c4dbd'},{id:'contento',t:'Estoy contento',c:'#3f9e5a'},{id:'nada',t:'No sé',c:'#9aa7b6'}];
-const REASONS_TEEN=[{id:'casa',t:'Algo en casa',c:'#e0679a'},{id:'amigos',t:'Amigos / grupo',c:'#4a90d9'},{id:'actividad',t:'La actividad de hoy',c:'#C55A11'},{id:'sueno',t:'Dormí poco',c:'#7c4dbd'},{id:'yo',t:'Cómo me veo/siento',c:'#159a9c'},{id:'nada',t:'No sé',c:'#9aa7b6'}];
-const WORRIES=[{id:'solo',t:'Quedarme solo',tag:'separacion',c:'#e0679a'},{id:'mama',t:'Separarme de mi familia',tag:'separacion',c:'#7c4dbd'},{id:'rian',t:'Que se rían de mí',tag:'social',c:'#C55A11'},{id:'exponer',t:'Pasar al frente',tag:'social',c:'#159a9c'},{id:'nuevos',t:'Jugar con niños que no conozco',tag:'social',c:'#2E5496'},{id:'agua',t:'La alberca / el agua',tag:'general',c:'#3f9e5a'}];
-/* Escenarios de exposición social del curso (danza, alberca, integración) */
-const ESC_KID=[{id:'frente',t:'La maestra te pide pasar al frente a bailar o decir tu nombre.'},{id:'invitan',t:'Unos niños te invitan a jugar con ellos.'},{id:'alberca',t:'Es hora de la alberca y hay muchos niños mirando.'},{id:'despedida',t:'Tu mamá o papá se despide y se va del curso.'}];
-const ESC_TEEN=[{id:'frente',t:'Tienes que exponer o presentarte frente a todo el grupo.'},{id:'rian',t:'Sientes que podrían criticarte o burlarse de ti.'},{id:'invitan',t:'Un grupo nuevo te invita a integrarte a su actividad.'},{id:'despedida',t:'Tienes que decidir algo sin tus amigos cerca.'}];
-/* Subescala de fobia social — ítems orientativos tipo SCAS (0-3). Redacción propia; usar la versión oficial del SCAS para el estudio formal. */
-const SCAS_89=[{id:'s1',t:'Me da miedo hacer cosas mientras otros me miran.',tag:'social'},{id:'s2',t:'Me preocupa hacer el ridículo frente a los demás.',tag:'social'},{id:'s3',t:'Me pongo nervioso si tengo que hablar o bailar frente al grupo.',tag:'social'},{id:'s4',t:'Me da pena unirme a jugar con niños que no conozco.',tag:'social'}];
-const SCAS_TEEN=[{id:'s1',t:'Me da miedo hacer cosas mientras me miran los demás.',tag:'social'},{id:'s2',t:'Me preocupa hacer el ridículo o quedar mal frente a otros.',tag:'social'},{id:'s3',t:'Me pongo nervioso/a si tengo que hablar o actuar frente al grupo.',tag:'social'},{id:'s4',t:'Me preocupa mucho lo que los demás piensen de mí.',tag:'social'},{id:'s5',t:'Evito integrarme a grupos donde no conozco a nadie.',tag:'social'},{id:'s6',t:'Me cuesta empezar a platicar con alguien nuevo.',tag:'social'}];
-const BANDS={
- '6-7':{label:'6–7',mode:'kid',foco:true,mods:['checkin','cuentos','atencion','globos','memorama'],esc:ESC_KID,reasons:REASONS_KID,acc:ACC_KID,worries:WORRIES},
- '8-9':{label:'8–9',mode:'kid',mods:['checkin','cuentos','escala','atencion','memorama'],esc:ESC_KID,reasons:REASONS_KID,acc:ACC_KID,escala:SCAS_89},
- '10-11':{label:'10–11',mode:'kid',mods:['checkin','cuentos','escala','sociograma','atencion'],esc:ESC_KID,reasons:REASONS_KID,acc:ACC_KID,escala:SCAS_TEEN},
- '12-13':{label:'12–13',mode:'teen',mods:['checkin','cuentos','escala','sociograma','apoyo'],esc:ESC_TEEN,reasons:REASONS_TEEN,acc:ACC_TEEN,escala:SCAS_TEEN},
- '14':{label:'14',mode:'teen',mods:['checkin','cuentos','escala','sociograma','apoyo'],esc:ESC_TEEN,reasons:REASONS_TEEN,acc:ACC_TEEN,escala:SCAS_TEEN}
-};
-function bandFor(e){return e<=7?'6-7':e<=9?'8-9':e<=11?'10-11':e<=13?'12-13':'14';}
-const MODEFS={
- checkin:{name:'¿Cómo me sentí?',ic:'heart',c:'#2E5496',run:m_checkin},
- cuentos:{name:'Situaciones',ic:'book',c:'#C55A11',run:m_cuentos},
- escala:{name:'¿Qué tanto te pasa?',ic:'list',c:'#159a9c',run:m_escala},
- atencion:{name:'Reflejos',ic:'target',c:'#E9B10A',run:m_atencion},
- globos:{name:'Globos de la calma',ic:'balloon',c:'#3f9e5a',run:m_globos},
- memorama:{name:'Memorama',ic:'cards',c:'#7c4dbd',run:m_memorama},
- sociograma:{name:'¿Con quién?',ic:'people',c:'#4a90d9',run:m_sociograma},
- apoyo:{name:'Mi red de apoyo',ic:'shield',c:'#7c4dbd',run:m_apoyo}
-};
-
-/* ===== SETUP ===== */
-function inicio(){
-  document.body.className='';
-  app.innerHTML=`<div class="screen">
-    <div class="topbar"><span class="brand">Ansiedad social · Curso de verano</span><span class="badge">Piloto · no diagnóstico</span></div>
-    <div class="card center"><div class="scene">${mascot(80)}</div><h1>Instrumento de observación</h1>
-      <p class="muted">Actividades lúdicas por edad para medir <b>ansiedad social</b> y acompañar a los niños del curso. Alimenta la base del estudio.</p></div>
-    <div class="card">
-      <div class="field"><label>Participante</label><select id="nino">${NINOS.map((n,i)=>`<option value="${i}">${n.nombre} (${n.codigo})</option>`).join('')}<option value="-1">Otro…</option></select></div>
-      <div id="otro" class="field hidden"><label>Nombre y código</label><input id="on" placeholder="Nombre"><div style="height:8px"></div><input id="oc" placeholder="Código (ej. N-03)"></div>
-      <div class="row">
-        <div class="field" style="flex:1"><label>Edad</label><select id="edad">${[6,7,8,9,10,11,12,13,14].map(e=>`<option ${e===6?'selected':''}>${e}</option>`).join('')}</select></div>
-        <div class="field" style="flex:1"><label>Corte</label><select id="corte"><option>Inicio</option><option>Medio</option><option>Cierre</option></select></div>
-      </div>
-      <div class="row">
-        <div class="field" style="flex:1"><label>Semana</label><select id="semana"><option>1</option><option>2</option><option>3</option></select></div>
-        <div class="field" style="flex:1.4"><label>Actividad de hoy</label><select id="act">${ACTIVIDADES.map(a=>`<option>${a}</option>`).join('')}</select></div>
-      </div>
-      <div class="field"><label>Facilitador / observador</label><input id="obs" placeholder="Tu nombre (opcional)"></div>
-      <div class="field"><label>Clave de aplicación</label><input id="claveApp" type="password" placeholder="Clave del equipo (se guarda en este teléfono)"></div>
-      <label style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--navy)"><input type="checkbox" id="snd" checked style="width:20px;height:20px"> Leer en voz alta</label>
+<!-- ================= LOGIN ================= -->
+<div id="login">
+  <div class="lcard">
+    <div class="brandrow"><div class="logo">SV</div>
+      <div><h1>Panel de administración</h1><p class="sub" style="margin:0">Ansiedad social · Curso de verano · SNTSS VI</p></div>
     </div>
-    <div class="foot"><button class="btn btn-primary btn-lg" onclick="entrar()">Entrar</button>
-      <p class="ethics">Piloto cuantitativo de ansiedad social (subescala tipo SCAS + caras + registro observacional). Deportivo SNTSS, Secc. VI Yucatán. <b>No es un diagnóstico.</b> Con consentimiento de padres/tutores; datos mínimos.</p></div></div>`;
-  document.getElementById('nino').onchange=e=>document.getElementById('otro').classList.toggle('hidden',e.target.value!=='-1');
-  try{const ca=localStorage.getItem('obs_clave_app');if(ca)document.getElementById('claveApp').value=ca;}catch(e){}
-  try{const pend=colaGet().length;
-    if(pend){const f=document.querySelector('.foot');
-      f.insertAdjacentHTML('afterbegin',`<div style="background:rgba(233,177,10,.15);border:1px solid rgba(233,177,10,.5);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:.85rem;font-weight:700;color:var(--navy)">⏳ ${pend} sesión(es) pendiente(s) de sincronizar. <button class="link" onclick="colaSync().then(()=>inicio())">Sincronizar ahora</button></div>`);}
-  }catch(e){}
+    <div style="height:14px"></div>
+    <form id="loginForm" autocomplete="on">
+      <div class="field"><label>Correo</label><input id="email" type="email" autocomplete="username" placeholder="correo@dominio.com" required></div>
+      <div class="field"><label>Contraseña</label><input id="pass" type="password" autocomplete="current-password" placeholder="••••••••" required></div>
+      <button class="btn btn-p" id="loginBtn" type="submit">Iniciar sesión</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+    <p class="sub" style="margin-top:14px">Acceso solo para personal autorizado. Herramienta de observación; <b>no constituye diagnóstico</b>.</p>
+    <div class="fieldlinks">
+      <span>¿Equipo de campo?</span>
+      <a href="instrumento.html">🎮 Abrir instrumento</a>
+      <a href="dashboard.html">📈 Tablero de campo</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <aside>
+    <div class="top"><div class="logo" style="background:var(--blue)">SV</div><div><b>Admin</b><small id="orgName">SNTSS VI</small></div></div>
+    <nav id="nav">
+      <button data-sec="resumen" class="active"><span class="ic">📊</span> Resumen</button>
+      <button data-sec="sesiones"><span class="ic">🗂️</span> Sesiones del estudio</button>
+      <button data-sec="participantes"><span class="ic">🧒</span> Participantes</button>
+      <button data-sec="instrumentos"><span class="ic">📋</span> Instrumentos</button>
+      <button data-sec="enlaces"><span class="ic">🔗</span> Pruebas y enlaces</button>
+      <button data-sec="usuarios"><span class="ic">👥</span> Usuarios y roles</button>
+      <button data-sec="auditoria"><span class="ic">🔎</span> Auditoría</button>
+    </nav>
+    <div class="foot">Panel v1 · Fase 4<br>Datos protegidos por rol (RLS).</div>
+  </aside>
+  <main>
+    <header class="bar">
+      <h2 id="secTitle">Resumen</h2>
+      <div class="who"><span id="roleChips"></span><b id="whoEmail"></b><button class="btn-sm" onclick="logout()">Salir</button></div>
+    </header>
+    <div class="disc">Los índices (0–100) son <b>orientativos</b> y sirven para el acompañamiento y el expediente. <b>No constituyen diagnóstico</b>; su interpretación se hace por grupo de edad con validación profesional.</div>
+    <div id="view"><div class="load"><span class="dl"></span> Cargando…</div></div>
+  </main>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const SB="https://sclqzavebwinezpivmwr.supabase.co";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbHF6YXZlYndpbmV6cGl2bXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDMzNjUsImV4cCI6MjA5NzIxOTM2NX0.khNF90QxEqh1jEOxdtseREfWLmGAW-3cVJpots4VbTc";
+const SS_KEY="admin_sess_v1";
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=s=>{try{return new Date(s).toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});}catch(e){return s||'';}};
+let SESS=null, ROLES=[], charts={};
+
+/* ================= AUTH ================= */
+function loadSess(){try{SESS=JSON.parse(sessionStorage.getItem(SS_KEY)||'null');}catch(e){SESS=null;}}
+function saveSess(){sessionStorage.setItem(SS_KEY,JSON.stringify(SESS));}
+function clearSess(){SESS=null;sessionStorage.removeItem(SS_KEY);}
+
+async function login(email,password){
+  const r=await fetch(`${SB}/auth/v1/token?grant_type=password`,{method:'POST',
+    headers:{'apikey':ANON,'Content-Type':'application/json'},
+    body:JSON.stringify({email,password})});
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.error_description||d.msg||d.error||'No se pudo iniciar sesión');
+  SESS={access_token:d.access_token,refresh_token:d.refresh_token,email:(d.user&&d.user.email)||email,
+        exp:Date.now()+((d.expires_in||3600)*1000)};
+  saveSess();
 }
-function entrar(){
-  const idx=document.getElementById('nino').value,edad=+document.getElementById('edad').value;let nino;
-  if(idx==='-1')nino={codigo:(document.getElementById('oc').value||'N-XX').trim(),nombre:(document.getElementById('on').value||'Participante').trim(),edad};
-  else nino={...NINOS[+idx],edad};
-  sound=document.getElementById('snd').checked;
-  try{const ca=document.getElementById('claveApp').value.trim();if(ca)localStorage.setItem('obs_clave_app',ca);}catch(e){}
-  const bandKey=bandFor(edad),band=BANDS[bandKey];
-  S={nino,edad,bandKey,band,semana:+document.getElementById('semana').value,corte:document.getElementById('corte').value,
-     actividad:document.getElementById('act').value,observador:document.getElementById('obs').value.trim(),t0:Date.now(),done:{},data:{escenarios:[]}};
-  document.body.className=band.mode;menu();
+async function refresh(){
+  if(!SESS||!SESS.refresh_token) return false;
+  const r=await fetch(`${SB}/auth/v1/token?grant_type=refresh_token`,{method:'POST',
+    headers:{'apikey':ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SESS.refresh_token})});
+  if(!r.ok){clearSess();return false;}
+  const d=await r.json();
+  SESS.access_token=d.access_token;SESS.refresh_token=d.refresh_token;SESS.exp=Date.now()+((d.expires_in||3600)*1000);saveSess();return true;
+}
+async function logout(){
+  try{await fetch(`${SB}/auth/v1/logout`,{method:'POST',headers:{'apikey':ANON,'Authorization':'Bearer '+SESS.access_token}});}catch(e){}
+  clearSess();location.reload();
+}
+/* API helper con esquema y refresh automático */
+async function api(path,{method='GET',body=null,schema=null}={}){
+  if(SESS && Date.now()>SESS.exp-5000) await refresh();
+  const h={'apikey':ANON,'Authorization':'Bearer '+SESS.access_token};
+  if(schema){h[method==='GET'?'Accept-Profile':'Content-Profile']=schema;}
+  if(body){h['Content-Type']='application/json';}
+  let r=await fetch(`${SB}/rest/v1/${path}`,{method,headers:h,body:body?JSON.stringify(body):null});
+  if(r.status===401 && await refresh()){h.Authorization='Bearer '+SESS.access_token;r=await fetch(`${SB}/rest/v1/${path}`,{method,headers:h,body:body?JSON.stringify(body):null});}
+  if(!r.ok) throw new Error('HTTP '+r.status+' en '+path);
+  const t=await r.text(); return t?JSON.parse(t):null;
 }
 
-/* ===== MENU ===== */
-function menu(){
-  const b=S.band,dc=Object.keys(S.done).length;
-  app.innerHTML=`<div class="screen">
-    <div class="topbar"><span class="brand">${S.edad<12?mascot(24):''} ${S.edad>=12?'Hola, ':'¡Hola, '}${S.nino.nombre.split(' ')[0]}${S.edad>=12?'':'!'}</span><span class="badge">${S.nino.codigo} · ${b.label} · ${S.actividad}</span></div>
-    <div class="card" style="padding:14px 16px"><h2 style="margin:2px 0">${S.edad>=12?'Elige una actividad':'¿A qué jugamos?'}</h2>
-      <p class="muted" style="margin:4px 0 0;font-size:.9rem">Corte ${S.corte} · Semana ${S.semana}. Al terminar pasa al cierre del observador.</p></div>
-    <div class="tiles">${b.mods.map(k=>{const m=MODEFS[k];return `<button class="tile ${S.done[k]?'done':''}" style="${b.mode==='kid'?`background:${m.c}`:''}" onclick="launch('${k}')">
-      ${S.done[k]?`<span class="chk">${icon('check',16,'#fff')}</span>`:''}<span class="ic">${icon(m.ic,36,b.mode==='kid'?'#fff':m.c)}</span>${m.name}</button>`;}).join('')}</div>
-    <div class="foot"><button class="btn btn-primary btn-lg" onclick="cierre()">Cierre del observador ▸</button>
-      <button class="link" style="margin:12px auto 0;display:block" onclick="inicio()">Cambiar de participante</button></div></div>`;
-  if(S.edad<12)autoRead(`¡Hola ${S.nino.nombre.split(' ')[0]}!`);
-}
-function launch(k){MODEFS[k].run();}
-function finish(k){S.done[k]=true;menu();}
+/* ================= ARRANQUE ================= */
+loadSess();
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const b=document.getElementById('loginBtn'),m=document.getElementById('loginMsg');
+  b.disabled=true;b.textContent='Entrando…';m.className='msg';
+  try{
+    await login(document.getElementById('email').value.trim(),document.getElementById('pass').value);
+    await entrarApp();
+  }catch(err){m.textContent=err.message;m.className='msg err';b.disabled=false;b.textContent='Iniciar sesión';}
+});
+(async function boot(){ if(SESS){ try{await entrarApp();}catch(e){clearSess();} } })();
 
-/* ===== CHECK-IN (caras tras la actividad / slider en grandes) ===== */
-function m_checkin(){S.data.checkin={};S.edad>=12?ck_slider():ck_face();}
-function ck_face(){
-  const q=`¿Cómo te sentiste en ${S.actividad.toLowerCase()} hoy?`;
-  app.innerHTML=`<div class="screen">${head('¿Cómo me sentí?')}
-    <div class="card">${P(q)}<div class="faces" id="f">${[0,1,2,3,4].map(i=>`<div class="face" data-v="${i}">${faceSVG(i,46)}<small>${['Muy bien','Bien','Normal','Nervioso','Muy mal'][i]}</small></div>`).join('')}</div></div>
-    <div class="foot"><button class="btn btn-primary" id="nx" disabled onclick="ck_reasons()">Siguiente</button></div></div>`;
-  bindFaces('f',v=>{S.data.termo_inicio=v;document.getElementById('nx').disabled=false;});autoRead(q);
-}
-function ck_slider(){
-  const q=`Del 0 (tranquilo) al 10, ¿qué tan nervioso/a te sentiste en ${S.actividad.toLowerCase()}?`;
-  app.innerHTML=`<div class="screen">${head('¿Cómo me sentí?')}
-    <div class="card">${P(q)}<div class="center" id="fv" style="margin:6px 0">${faceSVG(0,64)}</div><input type="range" min="0" max="10" value="0" id="sl"><div style="display:flex;justify-content:space-between;font-size:.8rem" class="muted"><span>Tranquilo</span><span>Muy nervioso</span></div></div>
-    <div class="foot"><button class="btn btn-primary" onclick="ck_reasons()">Siguiente</button></div></div>`;
-  const sl=document.getElementById('sl');S.data.termo_inicio=0;
-  sl.oninput=()=>{const v=+sl.value;S.data.termo_slider=v;S.data.termo_inicio=Math.round(v/10*4);document.getElementById('fv').innerHTML=faceSVG(Math.min(4,Math.round(v/10*4)),64);};
-  autoRead(q);
-}
-function ck_reasons(){
-  const q="¿Por qué te sentiste así? Puedes elegir varios.";S.data.checkin.reasons=[];
-  app.innerHTML=`<div class="screen">${head('¿Cómo me sentí?')}
-    <div class="card">${P(q)}<div class="grid grid-2" id="g">${S.band.reasons.map(r=>`<div class="opt" data-id="${r.id}"><span class="chip" style="background:${r.c}">${icon('check',16,'#fff')}</span>${r.t}</div>`).join('')}</div></div>
-    <div class="foot"><button class="btn btn-primary" onclick="finish('checkin')">Listo</button></div></div>`;
-  document.querySelectorAll('#g .opt').forEach(o=>o.onclick=()=>{o.classList.toggle('sel');S.data.checkin.reasons=[...document.querySelectorAll('#g .opt.sel')].map(x=>x.dataset.id);});
-  autoRead(q);
-}
-function bindFaces(id,cb){const c=document.getElementById(id);c.querySelectorAll('.face').forEach(f=>f.onclick=()=>{c.querySelectorAll('.face').forEach(x=>x.classList.remove('sel'));f.classList.add('sel');cb(+f.dataset.v);});}
-function choice(q,key,title,opts,onDone){
-  app.innerHTML=`<div class="screen">${head(title)}
-    <div class="card">${P(q)}<div class="grid" id="g" style="margin-top:8px">${opts.map(o=>`<div class="opt" data-id="${o.id}"><span class="chip" style="background:${o.c||'var(--blue)'}">${icon('check',16,'#fff')}</span>${o.t}</div>`).join('')}</div></div>
-    <div class="foot"><button class="btn btn-primary" id="nx" disabled>Siguiente</button></div></div>`;
-  document.querySelectorAll('#g .opt').forEach(o=>o.onclick=()=>{document.querySelectorAll('#g .opt').forEach(x=>x.classList.remove('sel'));o.classList.add('sel');S.data[key]=o.dataset.id;speak(opts.find(x=>x.id===o.dataset.id).t);document.getElementById('nx').disabled=false;});
-  document.getElementById('nx').onclick=onDone;autoRead(q);
+async function entrarApp(){
+  // verificar rol
+  ROLES=(await api('user_roles?select=role',{schema:'clinico'})).map(x=>x.role);
+  const puede=ROLES.some(r=>['admin','supervisor'].includes(r));
+  if(!puede){ clearSess(); const m=document.getElementById('loginMsg'); m.textContent='Tu cuenta no tiene rol de administrador o supervisor.'; m.className='msg err';
+    document.getElementById('loginBtn').disabled=false; document.getElementById('loginBtn').textContent='Iniciar sesión'; return; }
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='grid';
+  document.getElementById('whoEmail').textContent=SESS.email;
+  const cols={admin:'#C55A11',supervisor:'#159a9c',clinico:'#2E5496',facilitador:'#3f9e5a',capturista:'#7c4dbd'};
+  document.getElementById('roleChips').innerHTML=[...new Set(ROLES)].map(r=>`<span class="rolechip" style="background:${cols[r]||'#6b7a8d'}">${esc(r)}</span>`).join('');
+  document.querySelectorAll('#nav button').forEach(btn=>btn.onclick=()=>show(btn.dataset.sec));
+  show('resumen');
 }
 
-/* ===== CUENTOS (exposición social) ===== */
-function m_cuentos(){S.data.escenarios=[];esc(0);}
-function esc(i){
-  const list=S.band.esc,sc=list[i],q=sc.t,acc=S.band.acc;
-  app.innerHTML=`<div class="screen">${head('Situaciones')}${dots(i,list.length)}
-    <div class="card">${P(q)}
-      <p style="font-weight:700;color:var(--navy);margin-top:12px">¿Cómo te sentirías?</p>
-      <div class="faces" id="face">${[0,1,2,3].map(v=>`<div class="face" data-v="${v}">${faceSVG([0,1,3,4][v],44)}<small>${['Bien','Tranquilo','Nervioso','Muy mal'][v]}</small></div>`).join('')}</div>
-      <p style="font-weight:700;color:var(--navy);margin-top:12px">¿Qué harías?</p>
-      <div class="grid" id="acc">${acc.map(a=>`<div class="opt" data-id="${a.id}"><span class="chip" style="background:${a.c}"></span>${a.t}</div>`).join('')}</div></div>
-    <div class="foot"><button class="btn btn-primary" id="nx" disabled>Siguiente</button></div></div>`;
-  let face=null,ac=null;const chk=()=>{if(face!==null&&ac!==null)document.getElementById('nx').disabled=false;};
-  document.querySelectorAll('#face .face').forEach(f=>f.onclick=()=>{document.querySelectorAll('#face .face').forEach(x=>x.classList.remove('sel'));f.classList.add('sel');face=+f.dataset.v;save();chk();});
-  document.querySelectorAll('#acc .opt').forEach(o=>o.onclick=()=>{document.querySelectorAll('#acc .opt').forEach(x=>x.classList.remove('sel'));o.classList.add('sel');ac=o.dataset.id;speak(acc.find(a=>a.id===ac).t);save();chk();});
-  document.getElementById('nx').onclick=()=>{i<list.length-1?esc(i+1):finish('cuentos');};
-  function save(){const rec={id:sc.id,face,accion:ac};const ex=S.data.escenarios.findIndex(e=>e.id===sc.id);ex>=0?S.data.escenarios[ex]=rec:S.data.escenarios.push(rec);}
-  autoRead(q);
+/* ================= NAVEGACIÓN ================= */
+const TITLES={resumen:'Resumen',sesiones:'Sesiones del estudio',participantes:'Participantes',instrumentos:'Instrumentos',enlaces:'Pruebas y enlaces',usuarios:'Usuarios y roles',auditoria:'Auditoría'};
+function show(sec){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.sec===sec));
+  document.getElementById('secTitle').textContent=TITLES[sec];
+  const v=document.getElementById('view'); v.innerHTML='<div class="load"><span class="dl"></span> Cargando…</div>';
+  ({resumen:vResumen,sesiones:vSesiones,participantes:vParticipantes,instrumentos:vInstrumentos,enlaces:vEnlaces,usuarios:vUsuarios,auditoria:vAuditoria}[sec])(v)
+    .catch(e=>{v.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`;});
+}
+function destroy(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+const bandOf=r=>{const b=(r.respuestas&&r.respuestas.banda)||(r.juegos||'').split(':')[0];const e=r.edad||0;
+  return ['6-7','8-9','10-11','12-13','14'].includes(b)?b:(e<=7?'6-7':e<=9?'8-9':e<=11?'10-11':e<=13?'12-13':'14');};
+const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:null;
+
+/* ================= VISTAS ================= */
+async function vResumen(v){
+  const [res,ses]=await Promise.all([
+    api('rpc/clinico_resumen',{method:'POST',body:{}}),
+    api('obs_sesiones?select=ansiedad_social,red_apoyo,nivel_global,edad,semana,respuestas,juegos&order=created_at.asc&limit=2000')
+  ]);
+  const r0=(res&&res[0])||{sesiones:0,participantes:0,eventos_auditoria:0};
+  const soc=ses.map(x=>+x.ansiedad_social).filter(n=>!isNaN(n));
+  const ap=ses.map(x=>+x.red_apoyo).filter(n=>!isNaN(n));
+  const alerta=ses.filter(x=>['moderado','marcado'].includes(x.nivel_global)).length;
+  v.innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="v">${r0.sesiones}</div><div class="l">Sesiones</div></div>
+      <div class="kpi"><div class="v">${r0.participantes}</div><div class="l">Participantes</div></div>
+      <div class="kpi foco"><div class="v">${soc.length?Math.round(avg(soc)):'—'}</div><div class="l">Ansiedad social prom.</div></div>
+      <div class="kpi warn"><div class="v">${ses.length?Math.round(alerta/ses.length*100):0}%</div><div class="l">Moderado / marcado</div></div>
+      <div class="kpi ok"><div class="v">${ap.length?Math.round(avg(ap)):'—'}</div><div class="l">Red de apoyo prom.</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Ansiedad social por grupo de edad</h3><p class="s">Promedio 0–100 · con n por grupo</p><div class="chartbox"><canvas id="chB"></canvas></div></div>
+      <div class="card"><h3>Evolución por semana</h3><p class="s">Ansiedad social y red de apoyo</p><div class="chartbox"><canvas id="chS"></canvas></div></div>
+    </div>
+    ${ses.length?'':'<div class="empty" style="margin-top:14px"><b>Aún no hay sesiones capturadas.</b><br>Cuando el equipo aplique el instrumento, aquí aparecerán las métricas.</div>'}`;
+  if(!ses.length) return;
+  const BAND=['6-7','8-9','10-11','12-13','14'];
+  const byB=BAND.map(b=>{const a=ses.filter(x=>bandOf(x)===b).map(x=>+x.ansiedad_social).filter(n=>!isNaN(n));return{b,n:a.length,m:avg(a)};});
+  destroy('B');charts.B=new Chart(document.getElementById('chB'),{type:'bar',
+    data:{labels:byB.map(x=>x.b+(x.n?` (n=${x.n})`:'')),datasets:[{data:byB.map(x=>x.m==null?null:Math.round(x.m)),
+      backgroundColor:byB.map(x=>x.m==null?'#e4ebf5':x.m<25?'#3f9e5a':x.m<45?'#9bbf3f':x.m<65?'#E9B10A':'#d9534f'),borderRadius:7,maxBarThickness:52}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});
+  const sem=[1,2,3],ln=k=>sem.map(s=>{const a=ses.filter(x=>+x.semana===s).map(x=>+x[k]).filter(n=>!isNaN(n));return a.length?Math.round(avg(a)):null;});
+  destroy('S');charts.S=new Chart(document.getElementById('chS'),{type:'line',
+    data:{labels:['Sem 1','Sem 2','Sem 3'],datasets:[
+      {label:'Ansiedad social',data:ln('ansiedad_social'),borderColor:'#C55A11',backgroundColor:'#C55A11',tension:.35,spanGaps:true},
+      {label:'Red de apoyo',data:ln('red_apoyo'),borderColor:'#3f9e5a',backgroundColor:'#3f9e5a',tension:.35,spanGaps:true,borderDash:[6,4]}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{min:0,max:100}}}});
 }
 
-/* ===== ESCALA (SCAS fobia social, 0-3) ===== */
-function m_escala(){
-  const items=S.band.escala,q="Marca qué tanto te pasa cada cosa. No hay respuestas malas.";S.data.escala={};
-  const opts=['Nunca','A veces','Muchas veces','Siempre'];
-  app.innerHTML=`<div class="screen">${head('¿Qué tanto te pasa?')}
-    <div class="card">${P(q)}${items.map(it=>`<div style="margin:14px 0"><div style="font-weight:700;color:var(--navy);font-size:.95rem">${it.t}</div>
-      <div class="rate" data-id="${it.id}">${opts.map((o,v)=>`<button data-v="${v}">${o}</button>`).join('')}</div></div>`).join('')}</div>
-    <div class="foot"><button class="btn btn-primary" id="nx" disabled onclick="finish('escala')">Listo</button></div></div>`;
-  document.querySelectorAll('.rate').forEach(r=>r.querySelectorAll('button').forEach(b=>b.onclick=()=>{r.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');S.data.escala[r.dataset.id]=+b.dataset.v;if(Object.keys(S.data.escala).length===items.length)document.getElementById('nx').disabled=false;}));
-  if(S.edad<=9)autoRead(items[0].t);else autoRead(q);
+let SES_CACHE=[];
+async function vSesiones(v){
+  SES_CACHE=await api('obs_sesiones?select=*&order=created_at.desc&limit=2000');
+  v.innerHTML=`
+    <div class="toolbar">
+      <select id="fB"><option value="">Todas las edades</option>${['6-7','8-9','10-11','12-13','14'].map(b=>`<option>${b}</option>`).join('')}</select>
+      <select id="fC"><option value="">Todos los cortes</option><option value="inicio">Inicio</option><option value="medio">Medio</option><option value="cierre">Cierre</option></select>
+      <input id="fQ" placeholder="Buscar código…" style="min-width:150px">
+      <button class="btn-sm acc" onclick="exportCSV()">⬇ CSV</button>
+      <span class="tag" id="cnt"></span>
+    </div>
+    <div class="card" style="overflow-x:auto"><table id="t"><thead><tr>
+      <th>Fecha</th><th>Código</th><th>Edad</th><th>Banda</th><th>Corte</th><th>Actividad</th>
+      <th>A. social</th><th>Nivel</th><th>Red apoyo</th></tr></thead><tbody></tbody></table>
+      <div class="empty hidden" id="noRows"><b>Sin sesiones con estos filtros.</b></div></div>`;
+  ['fB','fC','fQ'].forEach(id=>document.getElementById(id).addEventListener('input',renderSes));
+  renderSes();
+}
+function filtSes(){
+  const b=document.getElementById('fB').value,c=document.getElementById('fC').value,q=(document.getElementById('fQ').value||'').toUpperCase();
+  return SES_CACHE.filter(r=>(!b||bandOf(r)===b)&&(!c||(r.modo||'').toLowerCase()===c)&&(!q||(r.nino_codigo||'').toUpperCase().includes(q)));
+}
+const nivelColor=n=>({'mínimo':'#3f9e5a','leve':'#9bbf3f','moderado':'#E9B10A','marcado':'#d9534f'}[n]||'#6b7a8d');
+function renderSes(){
+  const rows=filtSes(),tb=document.querySelector('#t tbody');
+  document.getElementById('cnt').textContent=rows.length+' sesiones';
+  document.getElementById('noRows').classList.toggle('hidden',rows.length>0);
+  tb.innerHTML=rows.map(r=>`<tr>
+    <td>${esc(fmtDate(r.created_at))}</td><td class="num">${esc(r.nino_codigo)}</td><td class="num">${esc(r.edad??'—')}</td>
+    <td>${esc(bandOf(r))}</td><td>${esc(r.modo||'—')}</td><td>${esc((r.respuestas&&r.respuestas.actividad)||'—')}</td>
+    <td class="num">${esc(r.ansiedad_social??'—')}</td>
+    <td><span class="pill" style="background:${nivelColor(r.nivel_global)}">${esc(r.nivel_global||'—')}</span></td>
+    <td class="num">${esc(r.red_apoyo??'—')}</td></tr>`).join('');
+}
+function exportCSV(){
+  const rows=filtSes();if(!rows.length){alert('Sin datos');return;}
+  const head=['fecha','codigo','nombre','edad','banda','semana','corte','actividad','ansiedad_social','ansiedad_general','dependencia','inatencion','red_apoyo','nivel','observador','notas'];
+  const q=v=>{v=(v==null?'':String(v)).replace(/"/g,'""');return /[",\n]/.test(v)?`"${v}"`:v;};
+  const lines=[head.join(',')].concat(rows.map(r=>[r.created_at,r.nino_codigo,r.nino_nombre,r.edad,bandOf(r),r.semana,r.modo,(r.respuestas&&r.respuestas.actividad)||'',r.ansiedad_social,r.ansiedad_general,r.dependencia,r.inatencion,r.red_apoyo,r.nivel_global,r.observador,r.notas].map(q).join(',')));
+  const blob=new Blob(["﻿"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sesiones_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
 }
 
-/* ===== ATENCIÓN ===== */
-let atmr=[];
-function m_atencion(){
-  const teen=S.edad>=12,q=teen?"Toca los verdes lo más rápido posible. No toques los rojos.":"Atrapa las estrellas. ¡No toques las nubes!";
-  app.innerHTML=`<div class="screen">${head(teen?'Reflejos':'Atrapa')}
-    <div class="card">${P(q)}<div class="gamehud"><span>Aciertos <b id="hit">0</b></span><span>⏱ <b id="clock">30</b>s</span></div><div id="playArea"></div></div>
-    <div class="foot"><button class="btn btn-ghost" id="start" onclick="atStart()">Empezar</button><button class="btn btn-primary hidden" id="nx" onclick="finish('atencion')">Listo</button></div></div>`;
-  autoRead(q);
+async function vParticipantes(v){
+  const p=await api('patients?select=folio,full_name,preferred_name,birth_date,status&order=folio',{schema:'clinico'});
+  const puedeAlta=ROLES.some(r=>['admin','clinico','capturista'].includes(r));
+  v.innerHTML=`<div class="toolbar">${puedeAlta?'<button class="btn-sm acc" onclick="formPaciente()">＋ Nuevo participante</button>':''}<span class="tag">${p.length} participantes</span></div>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Folio</th><th>Nombre</th><th>Preferido</th><th>Edad</th><th>Estatus</th></tr></thead>
+    <tbody>${p.length?p.map(x=>`<tr class="link-row" onclick="abrirFicha('${esc(x.folio)}')"><td class="num">${esc(x.folio)}</td><td>${esc(x.full_name)}</td><td>${esc(x.preferred_name||'—')}</td><td class="num">${edad(x.birth_date)}</td><td><span class="tag">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="5" class="empty"><b>Sin participantes.</b> Usa “Nuevo participante”.</td></tr>'}</tbody></table></div>`;
 }
-function atStart(){
-  const teen=S.edad>=12;document.getElementById('start').classList.add('hidden');
-  const area=document.getElementById('playArea');const g={hit:0,miss:0,err:0,targets:0,rts:[]};S.data.atencion=g;
-  let time=30;const clock=document.getElementById('clock');
-  const tick=setInterval(()=>{time--;clock.textContent=time;if(time<=0)end();},1000);
-  const spawn=setInterval(()=>{const good=Math.random()<0.72;if(good)g.targets++;const born=Date.now();
-    const inner=teen?dotSVG(52,good?'#4bbf73':'#e0574f'):(good?starSVG(52):cloudSVG(52));
-    const t=el(`<div class="target">${inner}</div>`);t.style.left=Math.random()*(area.clientWidth-60)+'px';t.style.top=Math.random()*(area.clientHeight-60)+'px';
-    let alive=true;t.onclick=()=>{if(!alive)return;alive=false;if(good){g.hit++;g.rts.push(Date.now()-born);document.getElementById('hit').textContent=g.hit;}else{g.err++;}t.style.opacity=.3;setTimeout(()=>t.remove(),140);};
-    area.appendChild(t);atmr.push(setTimeout(()=>{if(alive){alive=false;if(good)g.miss++;t.remove();}},teen?1000:1200));
-  },teen?720:820);
-  atmr.push(tick,spawn);
-  function end(){atmr.forEach(clearInterval);atmr.forEach(clearTimeout);atmr=[];g.rt_prom=Math.round(avg(g.rts));
-    area.innerHTML='<div style="display:flex;height:100%;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:var(--navy)">¡Bien hecho!</div>';document.getElementById('nx').classList.remove('hidden');}
+async function vInstrumentos(v){
+  const [ins,ver]=await Promise.all([
+    api('instruments?select=code,name,status,author_source,requires_consent&order=code',{schema:'clinico'}),
+    api('instrument_versions?select=version,age_min,age_max,target_population,instrument_id&order=version',{schema:'clinico'})
+  ]);
+  v.innerHTML=`<div class="card" style="overflow-x:auto"><h3>Catálogo de instrumentos</h3><p class="s">Versionados; los resultados conservan la versión exacta aplicada.</p>
+    <table><thead><tr><th>Código</th><th>Nombre</th><th>Estado</th><th>Consent.</th><th>Fuente</th></tr></thead>
+    <tbody>${ins.map(x=>`<tr><td class="num">${esc(x.code)}</td><td>${esc(x.name)}</td><td><span class="tag">${esc(x.status)}</span></td><td>${x.requires_consent?'Sí':'No'}</td><td style="font-size:.78rem;color:var(--muted)">${esc((x.author_source||'').slice(0,80))}</td></tr>`).join('')}</tbody></table></div>
+    <div class="card" style="margin-top:14px"><h3>Versiones</h3>
+    <table><thead><tr><th>Versión</th><th>Edad</th><th>Población</th></tr></thead>
+    <tbody>${ver.map(x=>`<tr><td class="num">${esc(x.version)}</td><td>${esc(x.age_min)}–${esc(x.age_max)}</td><td>${esc(x.target_population||'—')}</td></tr>`).join('')}</tbody></table></div>`;
 }
-
-/* ===== GLOBOS ===== */
-function m_globos(){S.data.worries=[];glo_pick();}
-function glo_pick(){
-  const q="¿Qué cosas te preocupan a veces? Toca los globos.";
-  app.innerHTML=`<div class="screen">${head('Globos de la calma')}
-    <div class="card">${P(q)}<div class="grid grid-2" id="b" style="margin-top:6px">${WORRIES.map(w=>`<div class="balloon" style="background:${w.c}" data-id="${w.id}">${w.t}</div>`).join('')}</div></div>
-    <div class="foot"><button class="btn btn-primary" onclick="glo_pop()">Siguiente</button></div></div>`;
-  document.querySelectorAll('#b .balloon').forEach(o=>o.onclick=()=>{o.classList.toggle('sel');S.data.worries=[...document.querySelectorAll('#b .balloon.sel')].map(x=>x.dataset.id);speak(WORRIES.find(w=>w.id===o.dataset.id).t);});
-  autoRead(q);
+async function vUsuarios(v){
+  const [prof,roles]=await Promise.all([
+    api('profiles?select=id,full_name,email&order=full_name',{schema:'clinico'}),
+    api('user_roles?select=profile_id,role',{schema:'clinico'})
+  ]);
+  const byP={};roles.forEach(r=>(byP[r.profile_id]=byP[r.profile_id]||[]).push(r.role));
+  const cols={admin:'#C55A11',supervisor:'#159a9c',clinico:'#2E5496',facilitador:'#3f9e5a',capturista:'#7c4dbd'};
+  v.innerHTML=`${ROLES.includes('admin')?'<div class="toolbar"><button class="btn-sm acc" onclick="formUsuario()">＋ Nuevo usuario</button></div>':'<div class="disc">Solo un administrador puede dar de alta usuarios.</div>'}
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Roles</th></tr></thead>
+    <tbody>${prof.map(p=>`<tr><td>${esc(p.full_name)}</td><td>${esc(p.email||'—')}</td><td>${(byP[p.id]||[]).map(r=>`<span class="rolechip" style="background:${cols[r]||'#6b7a8d'}">${esc(r)}</span>`).join('')||'—'}</td></tr>`).join('')}</tbody></table></div>`;
 }
-function glo_pop(){
-  const sel=S.data.worries.length?S.data.worries:WORRIES.slice(0,3).map(w=>w.id);const q="Ahora revienta tus preocupaciones.";
-  app.innerHTML=`<div class="screen">${head('Globos de la calma')}
-    <div class="card">${P(q)}<div id="pa" style="position:relative;height:280px">${sel.map((id,k)=>{const w=WORRIES.find(x=>x.id===id);return `<div class="balloon" style="position:absolute;width:42%;background:${w.c};left:${5+(k%2)*48}%;top:${5+Math.floor(k/2)*42}%;animation:float 1.6s ease-in-out ${k*0.2}s infinite alternate" data-id="${id}">${w.t}</div>`;}).join('')}
-      <div id="allpop" class="center hidden" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--green)">¡Muy bien!</div></div></div>
-    <div class="foot"><button class="btn btn-primary" onclick="glo_breathe()">Siguiente</button></div></div>`;
-  let left=sel.length;document.querySelectorAll('#pa .balloon').forEach(b=>b.onclick=()=>{b.style.transition='.15s';b.style.transform='scale(0)';setTimeout(()=>b.remove(),160);if(--left<=0)document.getElementById('allpop').classList.remove('hidden');speak('Pop');});
-  autoRead(q);
-}
-function glo_breathe(){
-  const q="Respira conmigo. Inhala… y exhala…";
-  app.innerHTML=`<div class="screen">${head('Globos de la calma')}
-    <div class="card center">${P(q)}<div class="breathe" id="bc">Inhala</div><p class="muted">Sigue el círculo 3 veces</p></div>
-    <div class="foot"><button class="btn btn-primary" onclick="glo_miedo()">Siguiente</button></div></div>`;
-  const bc=document.getElementById('bc');let n=0;
-  (function cyc(){if(n>=3){bc.textContent='¡Bien!';return;}bc.textContent='Inhala';bc.style.transform='scale(1.5)';speak('Inhala');setTimeout(()=>{bc.textContent='Exhala';bc.style.transform='scale(1)';speak('Exhala');n++;setTimeout(cyc,600);},4000);})();
-  autoRead(q);
-}
-function glo_miedo(){choice('Cuando algo te da miedo, ¿qué haces?','miedo_accion','Globos de la calma',[{id:'adulto',t:'Busco a un adulto',c:'#7c4dbd'},{id:'respiro',t:'Respiro y me calmo',c:'#3f9e5a'},{id:'amigo',t:'Le digo a un amigo',c:'#4a90d9'},{id:'solito',t:'Me quedo callado',c:'#9aa7b6'}],()=>finish('globos'));}
-
-/* ===== MEMORAMA ===== */
-function m_memorama(){
-  const q="Encuentra las parejas iguales.",keys=['star','heart','moon','sun','flower','cloud'];
-  const cols={star:'#E9B10A',heart:'#e0679a',moon:'#7c4dbd',sun:'#f0883e',flower:'#3f9e5a',cloud:'#4a90d9'};
-  let deck=[...keys,...keys].map((k,i)=>({k,i})).sort(()=>Math.random()-0.5);S.data.memorama={moves:0,errores:0,t0:Date.now()};
-  app.innerHTML=`<div class="screen">${head('Memorama')}
-    <div class="card">${P(q)}<div class="gamehud"><span>Parejas <b id="pairs">0</b>/6</span><span>Intentos <b id="mv">0</b></span></div>
-      <div class="mem" id="mem">${deck.map((c,idx)=>`<button class="mcard" data-idx="${idx}" data-k="${c.k}"></button>`).join('')}</div></div>
-    <div class="foot"><button class="btn btn-primary hidden" id="nx" onclick="finish('memorama')">Listo</button></div></div>`;
-  let flip=[],matched=0,lock=false;
-  document.querySelectorAll('#mem .mcard').forEach(card=>card.onclick=()=>{
-    if(lock||card.classList.contains('flip')||card.classList.contains('matched'))return;
-    card.classList.add('flip');card.innerHTML=icon(card.dataset.k,30,cols[card.dataset.k]);flip.push(card);
-    if(flip.length===2){lock=true;S.data.memorama.moves++;document.getElementById('mv').textContent=S.data.memorama.moves;const[a,b]=flip;
-      if(a.dataset.k===b.dataset.k){setTimeout(()=>{a.classList.add('matched');b.classList.add('matched');a.classList.remove('flip');b.classList.remove('flip');matched++;document.getElementById('pairs').textContent=matched;flip=[];lock=false;if(matched===6){S.data.memorama.dur=Math.round((Date.now()-S.data.memorama.t0)/1000);document.getElementById('nx').classList.remove('hidden');}},420);}
-      else{S.data.memorama.errores++;setTimeout(()=>{a.classList.remove('flip');b.classList.remove('flip');a.innerHTML='';b.innerHTML='';flip=[];lock=false;},720);}}
-  });autoRead(q);
+async function vAuditoria(v){
+  const a=await api('audit_logs?select=at,action,entity,entity_id,actor&order=at.desc&limit=300',{schema:'clinico'});
+  const accColor={INSERT:'#3f9e5a',UPDATE:'#E9B10A',DELETE:'#d9534f'};
+  v.innerHTML=`<div class="card" style="overflow-x:auto"><h3>Registro de auditoría</h3><p class="s">Últimos 300 eventos sobre datos clínicos (solo lectura, solo admin).</p>
+    <table><thead><tr><th>Fecha</th><th>Acción</th><th>Entidad</th><th>Registro</th></tr></thead>
+    <tbody>${a.length?a.map(x=>`<tr><td>${esc(fmtDate(x.at))}</td><td><span class="pill" style="background:${accColor[x.action]||'#6b7a8d'}">${esc(x.action)}</span></td><td>${esc(x.entity)}</td><td style="font-size:.72rem;color:var(--muted)">${esc((x.entity_id||'').slice(0,8))}</td></tr>`).join(''):'<tr><td colspan="4" class="empty"><b>Sin eventos.</b></td></tr>'}</tbody></table></div>`;
 }
 
-/* ===== SOCIOGRAMA ===== */
-function m_sociograma(){soc_q1();}
-function soc_q1(){choice('En las actividades, ¿con quién te gustaría estar?','sociograma','¿Con quién?',[{id:'varios',t:'Con varios compañeros',c:'#3f9e5a'},{id:'unodos',t:'Con uno o dos',c:'#4a90d9'},{id:'solo',t:'Prefiero estar solo/a',c:'#e0574f'},{id:'nose',t:'No sé con quién',c:'#9aa7b6'}],soc_q2);}
-function soc_q2(){choice('¿Sientes que los demás quieren jugar o trabajar contigo?','autoconcepto','¿Con quién?',[{id:'si',t:'Sí, casi siempre'},{id:'aveces',t:'A veces'},{id:'no',t:'Casi nunca'}],()=>finish('sociograma'));}
+/* ================= FASE 3 · ESCRITURA / FORMULARIOS ================= */
+let CUR_PAC=null;
+function rpc(fn,p){return api('rpc/'+fn,{method:'POST',body:{p}});}
+function modal(html){let el=document.getElementById('modalbg');if(!el){el=document.createElement('div');el.id='modalbg';el.className='modalbg';document.body.appendChild(el);}el.innerHTML='<div class="modal">'+html+'</div>';el.style.display='flex';el.onclick=e=>{if(e.target===el)cerrarModal();};}
+function cerrarModal(){const el=document.getElementById('modalbg');if(el)el.style.display='none';}
+function val(id){const e=document.getElementById(id);return e?String(e.value).trim():'';}
+const edad=bd=>{if(!bd)return '—';const d=new Date(bd),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))a--;return a;};
 
-/* ===== APOYO ===== */
-function m_apoyo(){ap1();}
-function ap1(){choice('Cuando te sientes mal, ¿a quién acudes primero?','apoyo_quien','Mi red de apoyo',[{id:'familia',t:'Mi familia',c:'#7c4dbd'},{id:'amigo',t:'Un amigo/a',c:'#4a90d9'},{id:'adulto',t:'Un facilitador o tutor',c:'#3f9e5a'},{id:'nadie',t:'Nadie, lo guardo',c:'#9aa7b6'}],ap2);}
-function ap2(){choice('¿Tienes personas de confianza aquí?','amigo','Mi red de apoyo',[{id:'si',t:'Sí, varias'},{id:'uno',t:'Sí, una'},{id:'no',t:'La verdad no'}],ap3);}
-function ap3(){choice('¿Puedes calmarte tú mismo/a cuando te estresas?','calma_solo','Mi red de apoyo',[{id:'si',t:'Sí, casi siempre'},{id:'aveces',t:'A veces'},{id:'no',t:'Me cuesta mucho'}],()=>finish('apoyo'));}
-
-/* ===== CIERRE · REGISTRO OBSERVACIONAL (facilitador, 0-3) ===== */
-const OBSITEMS=[
- {k:'ini_contacto',t:'Le costó iniciar contacto con otros',tag:'social'},
- {k:'no_invita',t:'No respondió a las invitaciones a jugar',tag:'social'},
- {k:'poca_verbal',t:'Poca o nula participación verbal',tag:'social'},
- {k:'evita_expo',t:'Malestar o evitación ante la exposición',tag:'social'},
- {k:'periferia',t:'Se mantuvo en la periferia (no en el centro)',tag:'social'},
- {k:'somaticas',t:'Señales somáticas visibles (rubor, temblor)',tag:'social'},
- {k:'recurre_adulto',t:'Recurrió al adulto para sentirse seguro',tag:'dependencia'}
-];
-function cierre(){
-  S.data.obs_ratings={};
-  app.innerHTML=`<div class="screen"><div class="topbar"><button class="back" onclick="menu()">‹ Menú</button><span class="badge">Registro observacional</span></div>
-    <div class="card"><h2>Cierre del observador</h2><p class="muted">Registro del facilitador (0 = nada, 3 = mucho) sobre la conducta real en <b>${S.actividad}</b> · corte ${S.corte}.</p>
-      ${OBSITEMS.map(it=>`<div style="margin:12px 0"><div style="font-weight:700;color:var(--navy);font-size:.9rem">${it.t}</div><div class="rate" data-k="${it.k}">${[0,1,2,3].map(v=>`<button data-v="${v}">${v}</button>`).join('')}</div></div>`).join('')}
-      <div class="field"><label>Observaciones para el expediente</label><textarea id="notas" rows="3" placeholder="Detonantes, cómo procediste, avances…"></textarea></div></div>
-    <div class="foot"><button class="btn btn-primary" id="nx" disabled onclick="resultados()">Ver resultados</button></div></div>`;
-  document.getElementById('notas').oninput=e=>S.data.notas=e.target.value;
-  document.querySelectorAll('.rate').forEach(r=>r.querySelectorAll('button').forEach(b=>b.onclick=()=>{r.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');S.data.obs_ratings[r.dataset.k]=+b.dataset.v;if(Object.keys(S.data.obs_ratings).length===OBSITEMS.length)document.getElementById('nx').disabled=false;}));
+/* ---- Alta / edición de participante ---- */
+function formPaciente(pac){
+  pac=pac||{};
+  modal(`<h3>${pac.id?'Editar':'Nuevo'} participante</h3>
+   <div class="frow">
+     <div class="fld"><label>Nombre completo *</label><input id="p_full" value="${esc(pac.full_name||'')}"></div>
+     <div class="fld"><label>Nombre preferido</label><input id="p_pref" value="${esc(pac.preferred_name||'')}"></div>
+     <div class="fld"><label>Fecha de nacimiento</label><input id="p_bd" type="date" value="${esc(pac.birth_date||'')}"></div>
+     <div class="fld"><label>Folio (auto si vacío)</label><input id="p_folio" value="${esc(pac.folio||'')}" ${pac.id?'disabled':''}></div>
+     <div class="fld"><label>Sexo</label><input id="p_sex" value="${esc(pac.sex||'')}"></div>
+     <div class="fld"><label>Teléfono</label><input id="p_tel" value="${esc(pac.phone||'')}"></div>
+     <div class="fld"><label>Escuela / ocupación</label><input id="p_esc" value="${esc(pac.school_or_occupation||'')}"></div>
+     <div class="fld"><label>Estatus</label><select id="p_st"><option ${pac.status==='activo'?'selected':''}>activo</option><option ${pac.status==='inactivo'?'selected':''}>inactivo</option><option ${pac.status==='egresado'?'selected':''}>egresado</option></select></div>
+   </div>
+   ${pac.id?'':`<div class="sec-h">Tutor (para menores)</div>
+   <div class="frow"><div class="fld"><label>Nombre del tutor</label><input id="t_nom"></div>
+     <div class="fld"><label>Parentesco</label><input id="t_par"></div>
+     <div class="fld"><label>Teléfono del tutor</label><input id="t_tel"></div></div>`}
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="p_save" onclick="guardarPaciente('${pac.id||''}')">Guardar</button></div>`);
+}
+async function guardarPaciente(id){
+  if(!val('p_full')){alert('El nombre completo es obligatorio');return;}
+  const b={id:id||'',full_name:val('p_full'),preferred_name:val('p_pref'),birth_date:val('p_bd'),folio:val('p_folio'),
+    sex:val('p_sex'),phone:val('p_tel'),school_or_occupation:val('p_esc'),status:val('p_st')};
+  if(!id){b.tutor_nombre=val('t_nom');b.tutor_parentesco=val('t_par');b.tutor_tel=val('t_tel');}
+  const btn=document.getElementById('p_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{const pid=await rpc('pac_guardar',b);cerrarModal();
+    if(id&&CUR_PAC){await abrirFicha(CUR_PAC.folio);}else{show('participantes');}}
+  catch(e){btn.disabled=false;btn.textContent='Guardar';alert('Error: '+e.message);}
 }
 
-/* ===== SCORING ===== */
-function escAvg(tag){const it=(S.band.escala||[]).filter(x=>x.tag===tag);if(!it.length||!S.data.escala)return null;const v=it.map(x=>S.data.escala[x.id]).filter(x=>x!=null);return v.length?avg(v)/3*100:null;}
-function obsAvg(tag){const it=OBSITEMS.filter(x=>x.tag===tag);const o=S.data.obs_ratings||{};const v=it.map(x=>o[x.k]).filter(x=>x!=null);return v.length?avg(v)/3*100:null;}
-function score(){
-  const d=S.data,esc=d.escenarios||[],byId=id=>esc.find(e=>e.id===id);
-  const accPen={acerco:0,miro:50,adulto:40,escondo:100},accDep={adulto:100,escondo:70,miro:40,acerco:10};
-  const wtag=t=>(d.worries||[]).map(id=>WORRIES.find(w=>w.id===id)).filter(w=>w&&w.tag===t).length;
-  const W=p=>p.length?clamp(p.reduce((s,x)=>s+x.v*x.w,0)/p.reduce((s,x)=>s+x.w,0)):null;
-  // ANSIEDAD SOCIAL (foco)
-  let sp=[];{const e=escAvg('social');if(e!=null)sp.push({v:e,w:.5});}
-  {const o=obsAvg('social');if(o!=null)sp.push({v:o,w:.4});}
-  if(esc.length){const soc=['frente','invitan','rian','alberca'].map(id=>{const e=byId(id);if(!e)return null;let a=accPen[e.accion]??0;if(id==='invitan'&&e.accion==='acerco')a=0;return .6*(e.face/3*100)+.4*a;}).filter(x=>x!=null);if(soc.length)sp.push({v:avg(soc),w:.35});}
-  if(wtag('social'))sp.push({v:clamp(wtag('social')*33),w:.15});
-  if(d.sociograma)sp.push({v:d.sociograma==='solo'?80:d.sociograma==='nose'?60:d.sociograma==='unodos'?30:10,w:.15});
-  const asoc=W(sp);
-  // ANSIEDAD GENERAL (paraguas)
-  let gp=[];if(d.termo_inicio!=null)gp.push({v:d.termo_inicio/4*100,w:.45});if(esc.length)gp.push({v:avg(esc.map(e=>e.face/3*100)),w:.35});if(d.worries)gp.push({v:clamp(d.worries.length/4*100),w:.2});
-  const ag=W(gp);
-  // INATENCIÓN
-  let ip=[];if(d.atencion&&d.atencion.targets){const om=d.atencion.miss/d.atencion.targets,er=d.atencion.err/((d.atencion.hit+d.atencion.err)||1);ip.push({v:clamp(.65*om*100+.35*er*100),w:.6});}
-  if(d.memorama&&d.memorama.moves)ip.push({v:clamp(d.memorama.errores/d.memorama.moves*100),w:.4});
-  const inat=W(ip);
-  // DEPENDENCIA / SEPARACIÓN
-  let dp=[];const sep=byId('despedida');if(sep)dp.push({v:.4*(sep.face/3*100)+.6*(accDep[sep.accion]??10),w:.3});
-  {const o=obsAvg('dependencia');if(o!=null)dp.push({v:o,w:.3});}
-  if(d.miedo_accion)dp.push({v:d.miedo_accion==='adulto'?100:(d.miedo_accion==='solito'?30:0),w:.15});
-  if(d.apoyo_quien)dp.push({v:d.apoyo_quien==='familia'||d.apoyo_quien==='adulto'?80:(d.apoyo_quien==='nadie'?20:40),w:.12});
-  if(wtag('separacion'))dp.push({v:clamp(wtag('separacion')*50),w:.15});
-  const dep=W(dp);
-  // RED DE APOYO (protector)
-  let rp=[];const am={si:100,uno:70,no:0},cm={si:100,aveces:50,no:0},mm={respiro:100,amigo:80,adulto:50,solito:10};
-  if(d.amigo!=null)rp.push({v:am[d.amigo]??0,w:.28});if(d.calma_solo!=null)rp.push({v:cm[d.calma_solo]??0,w:.22});
-  if(d.miedo_accion)rp.push({v:mm[d.miedo_accion]??0,w:.18});
-  if(d.sociograma)rp.push({v:d.sociograma==='varios'?100:d.sociograma==='unodos'?70:d.sociograma==='nose'?30:20,w:.18});
-  if(d.autoconcepto)rp.push({v:{si:100,aveces:55,no:15}[d.autoconcepto],w:.18});
-  if(esc.length)rp.push({v:['frente','invitan','alberca'].filter(id=>{const e=byId(id);return e&&e.accion==='acerco';}).length/3*100,w:.14});
-  const apoyo=W(rp);
-  const nivel=asoc==null?'sin dato':asoc<25?'mínimo':asoc<45?'leve':asoc<65?'moderado':'marcado';
-  const R=v=>v==null?null:Math.round(v);
-  return {ansiedad_general:R(ag),ansiedad_social:R(asoc),inatencion:R(inat),dependencia:R(dep),red_apoyo:R(apoyo),nivel_global:nivel};
+/* ---- Ficha del participante ---- */
+async function abrirFicha(folio){
+  const arr=await api('patients?folio=eq.'+encodeURIComponent(folio)+'&select=*',{schema:'clinico'});
+  const pac=arr[0];if(!pac)return;CUR_PAC=pac;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('secTitle').textContent='Expediente · '+(pac.preferred_name||pac.full_name);
+  const v=document.getElementById('view');
+  v.innerHTML=`<button class="btn-sm" onclick="show('participantes')">‹ Volver a participantes</button>
+    <div class="tabs" id="ftabs" style="margin-top:10px">
+      <button class="on" data-t="datos">Datos</button>
+      <button data-t="historia">Historia clínica</button>
+      <button data-t="consultas">Consultas y notas</button>
+      <button data-t="riesgos">Riesgos</button>
+      <button data-t="reporte">Reporte / PDF</button>
+    </div><div id="fbody"></div>`;
+  v.querySelectorAll('#ftabs button').forEach(b=>b.onclick=()=>{v.querySelectorAll('#ftabs button').forEach(x=>x.classList.toggle('on',x===b));fichaTab(b.dataset.t,pac);});
+  fichaTab('datos',pac);
+}
+function fichaTab(t,pac){const el=document.getElementById('fbody');el.innerHTML='<div class="load"><span class="dl"></span> Cargando…</div>';
+  ({datos:tabDatos,historia:tabHistoria,consultas:tabConsultas,riesgos:tabRiesgos,reporte:tabReporte}[t])(el,pac).catch(e=>el.innerHTML=`<div class="card"><b style="color:var(--red)">Error:</b> ${esc(e.message)}</div>`);}
+async function tabDatos(el,pac){
+  const g=await api('patient_guardians?patient_id=eq.'+pac.id+'&select=full_name,relationship,phone',{schema:'clinico'});
+  const rows=[['Folio',pac.folio],['Nombre',pac.full_name],['Preferido',pac.preferred_name],['Nacimiento',pac.birth_date],['Edad',edad(pac.birth_date)],['Sexo',pac.sex],['Teléfono',pac.phone],['Escuela/ocupación',pac.school_or_occupation],['Estatus',pac.status]];
+  const puede=ROLES.some(r=>['admin','clinico','capturista'].includes(r));
+  el.innerHTML=`<div class="card"><div class="frow">${rows.map(([k,x])=>`<div class="fld"><label>${k}</label><div>${esc(x||'—')}</div></div>`).join('')}</div>
+    ${g.length?`<div class="sec-h">Tutor(es)</div>${g.map(x=>`<div>${esc(x.full_name)} · ${esc(x.relationship||'—')} · ${esc(x.phone||'—')}</div>`).join('')}`:''}
+    ${puede?`<div style="margin-top:12px"><button class="btn-sm acc" onclick='formPaciente(${JSON.stringify({id:pac.id,folio:pac.folio,full_name:pac.full_name,preferred_name:pac.preferred_name,birth_date:pac.birth_date,sex:pac.sex,phone:pac.phone,school_or_occupation:pac.school_or_occupation,status:pac.status}).replace(/'/g,"&#39;")})'>Editar datos</button></div>`:''}</div>`;
 }
 
-/* ===== RESULTADOS ===== */
-function colorFor(v,p){if(v==null)return '#9aa7b6';const bad=p?100-v:v;return bad<25?'#3f9e5a':bad<45?'#9bbf3f':bad<65?'#E9B10A':'#d9534f';}
-function resultados(){
-  const r=score();S.scores=r;S.dur=Math.round((Date.now()-S.t0)/1000);
-  const M=[['ansiedad_social','Ansiedad social',false,true],['ansiedad_general','Ansiedad general',false,false],['dependencia','Dependencia / separación',false,false],['inatencion','Inatención',false,false],['red_apoyo','Red de apoyo (protector)',true,false]];
-  app.innerHTML=`<div class="screen"><div class="topbar"><span class="brand">Resultados</span><span class="badge">${S.nino.codigo} · ${S.band.label} · ${S.corte}</span></div>
-    <div class="card"><div style="font-weight:800;font-size:1.1rem">Ansiedad social: <span style="text-transform:capitalize">${r.nivel_global}</span></div>
-      <div class="muted" style="font-size:.85rem;margin-bottom:6px">${S.actividad} · edad ${S.edad} · Sem ${S.semana} · índices 0–100. No es diagnóstico.</div>
-      ${M.map(([k,t,p,foco])=>{const v=r[k];const c=colorFor(v,p);return `<div class="metric ${foco?'':''}"><div class="mh"><span>${foco?'★ ':''}${t}</span><span style="color:${c}">${v==null?'—':v}${p&&v!=null?' ▲':''}</span></div><div class="bar"><i style="width:${v==null?0:v}%;background:${c}"></i></div></div>`;}).join('')}</div>
-    <div class="card"><button class="btn btn-primary btn-lg" id="save" onclick="guardar()">Guardar en la base</button>
-      <div class="row" style="margin-top:10px"><button class="btn btn-ghost" onclick="descargar()">Respaldo</button><button class="btn btn-ghost" onclick="copiarFila()">Fila Excel</button></div>
-      <button class="link" style="margin:12px auto 0;display:block" onclick="entrar2()">Otra sesión (mismo participante)</button>
-      <p class="ethics">Foco: <b>ansiedad social</b> (subescala tipo SCAS + caras + registro observacional). Interpretación por grupo de edad; la valida un profesional. <b>No es diagnóstico.</b></p></div></div>`;
+/* ---- Historia clínica (modular, guardado parcial, no evaluado) ---- */
+const HSECS=[['motivo','Motivo de consulta'],['problema','Problema actual (inicio, duración, frecuencia, intensidad)'],['desencadenantes','Factores desencadenantes'],['ant_psico','Antecedentes psicológicos'],['ant_psiq','Antecedentes psiquiátricos'],['ant_medicos','Antecedentes médicos / medicamentos / hospitalizaciones'],['ant_familiares','Antecedentes familiares'],['desarrollo','Historia del desarrollo (embarazo, nacimiento, psicomotor)'],['escolar','Historia escolar'],['familiar','Dinámica familiar / relaciones interpersonales'],['habitos','Sueño / alimentación / actividad física / sustancias'],['trauma','Eventos traumáticos'],['protectores','Factores protectores / red de apoyo'],['estado_mental','Evaluación del estado mental'],['riesgos','Evaluación inicial de riesgos']];
+async function tabHistoria(el,pac){
+  if(!ROLES.some(r=>['admin','clinico'].includes(r))){el.innerHTML='<div class="disc">Solo personal clínico puede ver o editar la historia clínica.</div>';return;}
+  const arr=await rpc('historia_de',{}).catch(()=>null); // fallback
+  let h={sections:{}};
+  try{const r=await api('rpc/historia_de',{method:'POST',body:{pid:pac.id}});h=(r&&r[0])||{sections:{}};}catch(e){}
+  const S=h.sections||{};
+  el.innerHTML=`<div class="card">
+    <div class="savehint">Guardado parcial: puedes llenar por partes y continuar después. Marca <b>No evaluado</b> cuando un apartado no aplica (evita confundir vacío con ausencia).</div>
+    ${HSECS.map(([k,lbl])=>`<div class="sec-h">${lbl}</div>
+      <textarea id="h_${k}" ${S[k]&&S[k].no_evaluado?'disabled':''}>${esc(S[k]?(S[k].valor||''):'')}</textarea>
+      <label class="noeval"><input type="checkbox" id="ne_${k}" ${S[k]&&S[k].no_evaluado?'checked':''} onchange="document.getElementById('h_${k}').disabled=this.checked"> No evaluado</label>`).join('')}
+    <div class="sec-h">Impresión clínica</div><textarea id="h_impr">${esc(h.clinical_impression||'')}</textarea>
+    <div class="sec-h">Objetivos terapéuticos</div><textarea id="h_obj">${esc(h.therapeutic_goals||'')}</textarea>
+    <div class="sec-h">Plan de intervención</div><textarea id="h_plan">${esc(h.intervention_plan||'')}</textarea>
+    <div class="sec-h">Pronóstico</div><textarea id="h_prono">${esc(h.prognosis||'')}</textarea>
+    <div class="sec-h">Observaciones</div><textarea id="h_obs">${esc(h.observations||'')}</textarea>
+    <div class="sec-h">Diagnóstico profesional <span class="draft">solo si aplica · registro expreso del profesional</span></div>
+    <textarea id="h_dx" placeholder="Dejar vacío si no procede. Un puntaje nunca es un diagnóstico.">${esc(h.professional_diagnosis||'')}</textarea>
+    <div class="savebar"><button class="btn-sm acc" id="h_save" onclick="guardarHistoria('${pac.id}')">Guardar historia</button><span class="savehint" id="h_msg"></span></div></div>`;
 }
-function entrar2(){S={...S,t0:Date.now(),done:{},data:{escenarios:[]},scores:null};menu();}
+async function guardarHistoria(pid){
+  const sections={};HSECS.forEach(([k])=>{sections[k]={valor:document.getElementById('h_'+k).value,no_evaluado:document.getElementById('ne_'+k).checked};});
+  const b={patient_id:pid,sections,clinical_impression:val('h_impr'),therapeutic_goals:val('h_obj'),intervention_plan:val('h_plan'),prognosis:val('h_prono'),observations:val('h_obs'),professional_diagnosis:val('h_dx')};
+  const btn=document.getElementById('h_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('historia_guardar',b);document.getElementById('h_msg').textContent='Guardada ✓ '+new Date().toLocaleTimeString('es-MX');}
+  catch(e){alert('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Guardar historia';}
+}
 
-/* ===== SAVE + COLA OFFLINE =====
-   - Cada sesión lleva un UUID generado en el cliente => reintentos idempotentes
-     (un 409 significa "ya guardada", nunca se duplica).
-   - Si no hay conexión, la sesión queda en una cola local (localStorage) y se
-     sincroniza sola al recuperar internet. La cola se vacía al sincronizar;
-     no es un almacén permanente de datos sensibles. */
-const genId=()=> (crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&3|8)).toString(16);}));
-const COLA_KEY='obs_cola_v1';
-const colaGet=()=>{try{return JSON.parse(localStorage.getItem(COLA_KEY)||'[]');}catch(e){return[];}};
-const colaSet=a=>{try{localStorage.setItem(COLA_KEY,JSON.stringify(a));}catch(e){}};
-async function enviar(p){
-  const clave=(localStorage.getItem('obs_clave_app')||'').trim();
-  const res=await fetch(CONFIG.CAP_FN,{method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({clave,sesion:p})});
-  if(res.status===409)return 'dup';      // ya existía: éxito idempotente
-  if(res.status===401){const e=new Error('clave_invalida');e.claveInvalida=true;throw e;}
-  if(!res.ok)throw new Error('HTTP '+res.status);
-  return 'ok';
+/* ---- Consultas y notas ---- */
+async function tabConsultas(el,pac){
+  if(!ROLES.some(r=>['admin','clinico'].includes(r))){el.innerHTML='<div class="disc">Solo personal clínico puede registrar consultas.</div>';return;}
+  const enc=await api('encounters?patient_id=eq.'+pac.id+'&select=id,starts_at,modality,objective,clinical_notes(id,format,subjective,objective,assessment,plan,free_text,signed_at,note_addenda(id,reason,content,created_at))&order=starts_at.desc',{schema:'clinico'});
+  el.innerHTML=`<div class="card"><button class="btn-sm acc" onclick="formConsulta('${pac.id}')">＋ Nueva consulta</button></div>
+    ${enc.length?enc.map(renderEnc).join(''):'<div class="empty">Sin consultas registradas.</div>'}`;
 }
-async function colaSync(){
-  const cola=colaGet();if(!cola.length)return;
-  const resto=[];let enviadas=0;
-  for(const p of cola){try{await enviar(p);enviadas++;}catch(e){resto.push(p);}}
-  colaSet(resto);
-  if(enviadas)toast(`Sincronizadas ${enviadas} sesión(es) pendiente(s).`);
+function renderEnc(e){
+  const n=(e.clinical_notes&&e.clinical_notes[0])||{};
+  const firm=n.signed_at?`<span class="signed">Firmada · ${esc(fmtDate(n.signed_at))}</span>`:`<span class="draft">Borrador</span>`;
+  const body=n.format==='libre'?esc(n.free_text||''):[['S','subjective'],['O','objective'],['A','assessment'],['P','plan']].map(([lp,k])=>n[k]?`<b>${lp}:</b> ${esc(n[k])}`:'').filter(Boolean).join('<br>');
+  const adds=(n.note_addenda||[]).map(a=>`<div style="margin-top:6px;padding:8px;border-left:3px solid var(--gold);background:#fffdf5;font-size:.82rem"><b>Adenda</b> · ${esc(fmtDate(a.created_at))} · ${esc(a.reason||'')}<br>${esc(a.content||'')}</div>`).join('');
+  return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <b>${esc(fmtDate(e.starts_at))} · ${esc(e.modality||'—')}</b>${firm}</div>
+    ${e.objective?`<div class="savehint" style="margin:4px 0">Objetivo: ${esc(e.objective)}</div>`:''}
+    <div style="font-size:.86rem;margin-top:6px">${body||'<span class="savehint">Sin nota</span>'}</div>${adds}
+    ${n.signed_at?`<div style="margin-top:8px"><button class="btn-line" onclick="formAdenda('${n.id}')">Agregar adenda</button></div>`:''}</div>`;
 }
-window.addEventListener('online',colaSync);
-setTimeout(colaSync,1500);
-function payload(){const r=S.scores||score();return {id:(S.saveId=S.saveId||genId()),nino_codigo:S.nino.codigo,nino_nombre:S.nino.nombre,edad:S.edad,semana:S.semana,observador:S.observador||null,dispositivo:(S.bandKey+' | '+navigator.userAgent).slice(0,90),duracion_seg:S.dur||null,modo:S.corte.toLowerCase(),juegos:S.bandKey+':'+Object.keys(S.done).join(','),ansiedad_general:r.ansiedad_general,ansiedad_social:r.ansiedad_social,inatencion:r.inatencion,dependencia:r.dependencia,red_apoyo:r.red_apoyo,nivel_global:r.nivel_global,respuestas:{banda:S.bandKey,actividad:S.actividad,corte:S.corte,...S.data},notas:(document.querySelector('#notas')?.value)||S.data.notas||null};}
-async function guardar(){const btn=document.getElementById('save');btn.disabled=true;btn.textContent='Guardando…';
-  const p=payload();
-  try{await enviar(p);btn.textContent='Guardado ✓';btn.style.background='var(--green)';toast('Sesión guardada · id '+String(p.id).slice(0,8));colaSync();
-  }catch(e){
-    if(e.claveInvalida){
-      btn.disabled=false;btn.textContent='Reintentar guardar';btn.style.background='var(--red)';
-      toast('Clave de aplicación incorrecta. Corrígela en la pantalla inicial (Cambiar de participante).',4200);
-      return;
-    }
-    // sin conexión o error del servidor: a la cola local, se sincroniza sola después
-    const cola=colaGet();if(!cola.some(x=>x.id===p.id))cola.push(p);colaSet(cola);
-    btn.textContent='Pendiente de sincronizar ⏳';btn.style.background='var(--gold)';btn.disabled=true;
-    toast('Sin conexión: la sesión quedó guardada en el teléfono y se enviará sola al volver el internet.',4200);
-  }}
-function descargar(){const blob=new Blob([JSON.stringify(payload(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`obs_${S.nino.codigo}_${S.bandKey}_S${S.semana}.json`;a.click();toast('Respaldo descargado');}
-function copiarFila(){const r=S.scores;const row=[S.nino.codigo,S.nino.nombre,S.edad,S.bandKey,S.semana,S.corte,S.actividad,r.ansiedad_social,r.ansiedad_general,r.dependencia,r.inatencion,r.red_apoyo,r.nivel_global].join('\t');navigator.clipboard?.writeText(row).then(()=>toast('Fila copiada'),()=>toast('Copia: '+row));}
+function formConsulta(pid){
+  modal(`<h3>Nueva consulta</h3>
+   <div class="frow">
+     <div class="fld"><label>Fecha y hora</label><input id="c_dt" type="datetime-local"></div>
+     <div class="fld"><label>Duración (min)</label><input id="c_dur" type="number" value="50"></div>
+     <div class="fld"><label>Modalidad</label><input id="c_mod" value="presencial"></div>
+     <div class="fld"><label>Formato</label><select id="c_fmt"><option>SOAP</option><option>DAP</option><option>libre</option></select></div>
+   </div>
+   <div class="fld"><label>Objetivo de la sesión</label><input id="c_obj"></div>
+   <div id="c_fields"></div>
+   <label class="noeval" style="margin-top:8px"><input type="checkbox" id="c_firm"> Firmar la nota (queda <b>bloqueada</b>; correcciones solo por adenda)</label>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="c_save" onclick="guardarConsulta('${pid}')">Guardar</button></div>`);
+  const render=()=>{const f=document.getElementById('c_fmt').value,box=document.getElementById('c_fields');
+    box.innerHTML=f==='libre'?`<div class="fld"><label>Nota libre</label><textarea id="c_free"></textarea></div>`:
+      `<div class="fld"><label>${f==='SOAP'?'Subjetivo (S)':'Datos (D)'}</label><textarea id="c_s"></textarea></div>
+       ${f==='SOAP'?`<div class="fld"><label>Objetivo (O)</label><textarea id="c_o"></textarea></div>`:''}
+       <div class="fld"><label>${f==='SOAP'?'Evaluación (A)':'Evaluación (A)'}</label><textarea id="c_a"></textarea></div>
+       <div class="fld"><label>Plan (P)</label><textarea id="c_p"></textarea></div>`;};
+  document.getElementById('c_fmt').onchange=render;render();
+}
+async function guardarConsulta(pid){
+  const fmt=val('c_fmt');
+  const b={patient_id:pid,format:fmt,starts_at:val('c_dt')?new Date(val('c_dt')).toISOString():null,
+    duration_min:val('c_dur'),modality:val('c_mod'),objective:val('c_obj'),firmar:document.getElementById('c_firm').checked};
+  if(fmt==='libre')b.free_text=val('c_free');else{b.subjective=val('c_s');b.objective=(document.getElementById('c_o')?val('c_o'):'');b.assessment=val('c_a');b.plan=val('c_p');}
+  const btn=document.getElementById('c_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('consulta_guardar',b);cerrarModal();fichaTab('consultas',CUR_PAC);}
+  catch(e){btn.disabled=false;btn.textContent='Guardar';alert('Error: '+e.message);}
+}
+function formAdenda(noteId){
+  modal(`<h3>Agregar adenda</h3><p class="savehint">La nota firmada no se modifica; la adenda queda registrada con autor, fecha y motivo.</p>
+   <div class="fld"><label>Motivo</label><input id="a_reason"></div>
+   <div class="fld"><label>Contenido</label><textarea id="a_content"></textarea></div>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="a_save" onclick="guardarAdenda('${noteId}')">Guardar adenda</button></div>`);
+}
+async function guardarAdenda(noteId){
+  if(!val('a_reason')||!val('a_content')){alert('Motivo y contenido son obligatorios');return;}
+  const btn=document.getElementById('a_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('nota_adenda',{note_id:noteId,reason:val('a_reason'),content:val('a_content')});cerrarModal();fichaTab('consultas',CUR_PAC);}
+  catch(e){btn.disabled=false;btn.textContent='Guardar adenda';alert('Error: '+e.message);}
+}
 
-inicio();
+/* ---- Módulo de riesgos (valoración operativa, sin conclusiones automáticas) ---- */
+const RDOMS=[['suicida','Ideación / conducta suicida'],['autolesion','Autolesión no suicida'],['heteroagresion','Agresión hacia terceros'],['abuso','Indicadores de abuso o maltrato al menor'],['negligencia','Negligencia / desprotección'],['otros','Otros riesgos relevantes']];
+const RNIV=['sin_dato','bajo','moderado','alto'];
+const NIVLBL={sin_dato:'Sin dato',bajo:'Bajo',moderado:'Moderado',alto:'Alto'};
+async function tabRiesgos(el,pac){
+  if(!ROLES.some(r=>['admin','clinico'].includes(r))){el.innerHTML='<div class="disc">Solo personal clínico puede ver o registrar valoraciones de riesgo.</div>';return;}
+  let prev=[];
+  try{prev=await api('rpc/riesgos_de',{method:'POST',body:{pid:pac.id}});}catch(e){}
+  const hayAlto=(d)=>d&&Object.values(d).some(x=>x&&x.nivel==='alto');
+  const ultAlta=prev.some(r=>hayAlto(r.domains));
+  el.innerHTML=`
+    <div class="disc">Esta valoración es una <b>herramienta operativa de acompañamiento</b>. No genera diagnósticos ni conclusiones clínicas automáticas: el nivel de riesgo lo determina el profesional y toda decisión final le corresponde. Ante un riesgo grave, active el protocolo institucional y los servicios de emergencia.</div>
+    ${ultAlta?`<div class="ralert">⚠ Alerta operativa: existe al menos una valoración con un dominio en nivel <b>ALTO</b>. Verifique que se haya activado el protocolo institucional y notificado al profesional responsable. <span class="savehint">Aviso operativo · no constituye diagnóstico.</span></div>`:''}
+    <div class="card"><button class="btn-sm acc" onclick="formRiesgo('${pac.id}')">＋ Nueva valoración de riesgo</button></div>
+    ${prev.length?prev.map(renderRiesgo).join(''):'<div class="empty">Sin valoraciones de riesgo registradas.</div>'}`;
+}
+function renderRiesgo(r){
+  const d=r.domains||{};
+  const chips=RDOMS.map(([k,lbl])=>{const v=d[k];if(!v||!v.nivel||v.nivel==='sin_dato')return '';
+    return `<span class="rchip lv-${esc(v.nivel)}">${esc(lbl)}: <b>${esc(NIVLBL[v.nivel]||v.nivel)}</b></span>`;}).filter(Boolean).join('');
+  const notas=RDOMS.map(([k,lbl])=>{const v=d[k];return v&&v.nota?`<div style="font-size:.82rem;margin-top:3px"><b>${esc(lbl)}:</b> ${esc(v.nota)}</div>`:'';}).filter(Boolean).join('');
+  const alto=Object.values(d).some(x=>x&&x.nivel==='alto');
+  return `<div class="card" style="${alto?'border-left:4px solid var(--red)':''}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <b>${esc(fmtDate(r.created_at))}</b>${r.emergency_contacted?'<span class="signed">Emergencia contactada</span>':''}</div>
+    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${chips||'<span class="savehint">Sin dominios marcados</span>'}</div>
+    ${notas}
+    ${r.protective_factors?`<div class="savehint" style="margin-top:8px"><b>Factores protectores:</b> ${esc(r.protective_factors)}</div>`:''}
+    ${r.actions_taken?`<div class="savehint"><b>Acciones tomadas:</b> ${esc(r.actions_taken)}</div>`:''}
+    ${r.referral?`<div class="savehint"><b>Derivación:</b> ${esc(r.referral)}</div>`:''}
+    ${r.follow_up?`<div class="savehint"><b>Seguimiento:</b> ${esc(r.follow_up)}</div>`:''}</div>`;
+}
+function formRiesgo(pid){
+  modal(`<h3>Nueva valoración de riesgo</h3>
+   <p class="savehint">Registre lo observado por dominio. El nivel es un apoyo operativo; la valoración clínica corresponde al profesional. <b>No es un diagnóstico.</b></p>
+   ${RDOMS.map(([k,lbl])=>`<div class="fld"><label>${lbl}</label>
+     <select id="rd_${k}">${RNIV.map(n=>`<option value="${n}">${NIVLBL[n]}</option>`).join('')}</select>
+     <input id="rn_${k}" placeholder="Observación (opcional)" style="margin-top:6px"></div>`).join('')}
+   <div class="fld"><label>Factores protectores</label><textarea id="r_prot"></textarea></div>
+   <div class="fld"><label>Acciones tomadas</label><textarea id="r_acc"></textarea></div>
+   <div class="fld"><label>Derivación</label><input id="r_ref"></div>
+   <div class="fld"><label>Plan de seguimiento</label><input id="r_fu"></div>
+   <label class="noeval" style="margin-top:8px"><input type="checkbox" id="r_emg"> Se contactó a servicios de emergencia / contacto de emergencia</label>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="r_save" onclick="guardarRiesgo('${pid}')">Guardar valoración</button></div>`);
+}
+async function guardarRiesgo(pid){
+  const domains={};RDOMS.forEach(([k])=>{const nivel=document.getElementById('rd_'+k).value,nota=val('rn_'+k);
+    if(nivel!=='sin_dato'||nota)domains[k]={nivel,nota};});
+  const b={patient_id:pid,domains,protective_factors:val('r_prot'),actions_taken:val('r_acc'),referral:val('r_ref'),follow_up:val('r_fu'),emergency_contacted:document.getElementById('r_emg').checked};
+  const btn=document.getElementById('r_save');btn.disabled=true;btn.textContent='Guardando…';
+  try{await rpc('riesgo_guardar',b);
+    if(Object.values(domains).some(x=>x.nivel==='alto'))alert('Valoración guardada.\n\nAviso operativo: registró al menos un dominio en nivel ALTO. Active el protocolo institucional y notifique al profesional responsable. Este aviso es operativo y no constituye un diagnóstico.');
+    cerrarModal();fichaTab('riesgos',CUR_PAC);}
+  catch(e){btn.disabled=false;btn.textContent='Guardar valoración';alert('Error: '+e.message);}
+}
+
+/* ---- Reportes PDF (vista previa + selección de secciones) ---- */
+const RSECS=[['datos','Resumen del expediente'],['historia','Historia clínica'],['consultas','Consultas y notas'],['riesgos','Valoraciones de riesgo']];
+async function tabReporte(el,pac){
+  const clin=ROLES.some(r=>['admin','clinico'].includes(r));
+  el.innerHTML=`<div class="card">
+    <div class="savehint">Seleccione qué secciones incluir. La vista previa se genera con los datos guardados; use <b>Guardar como PDF</b> (imprimir → destino PDF).</div>
+    <div style="margin:12px 0;display:flex;flex-wrap:wrap;gap:14px">
+      ${RSECS.map(([k,lbl])=>`<label class="noeval"><input type="checkbox" class="rsec" value="${k}" ${k==='datos'?'checked':''} ${(k!=='datos'&&!clin)?'disabled':''}> ${lbl}${(k!=='datos'&&!clin)?' <span class="savehint">(solo clínico)</span>':''}</label>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px"><button class="btn-sm acc" id="rep_prev" onclick="generarReporte('${pac.id}')">Generar vista previa</button>
+      <button class="btn-line" id="rep_pdf" style="display:none" onclick="imprimirReporte('${pac.id}')">Guardar como PDF</button></div>
+    <div id="rep_msg" class="savehint" style="margin-top:8px"></div></div>
+    <div id="rep_out"></div>`;
+}
+async function generarReporte(pid){
+  const secs=[...document.querySelectorAll('.rsec:checked')].map(x=>x.value);
+  if(!secs.length){alert('Seleccione al menos una sección.');return;}
+  const out=document.getElementById('rep_out');out.innerHTML='<div class="load"><span class="dl"></span> Generando…</div>';
+  const pac=CUR_PAC;
+  let g=[];try{g=await api('patient_guardians?patient_id=eq.'+pac.id+'&select=full_name,relationship,phone',{schema:'clinico'});}catch(e){}
+  let parts=[];
+  parts.push(`<div class="rep-head"><div><div class="rep-org">Deportivo SNTSS Sección VI · Yucatán</div><div class="rep-sub">Curso de verano · Expediente de acompañamiento</div></div>
+    <div class="rep-meta">Folio: <b>${esc(pac.folio)}</b><br>Emitido: ${esc(new Date().toLocaleString('es-MX'))}</div></div>
+    <div class="rep-disc">Documento orientativo para acompañamiento y seguimiento. Los índices y valoraciones <b>no constituyen un diagnóstico</b> y no sustituyen la valoración de un profesional. Contiene datos personales de un menor: trato confidencial conforme a la normativa de protección de datos.</div>`);
+  if(secs.includes('datos')){
+    const rows=[['Nombre',pac.full_name],['Nombre preferido',pac.preferred_name],['Nacimiento',pac.birth_date],['Edad',edad(pac.birth_date)],['Sexo',pac.sex],['Escuela/ocupación',pac.school_or_occupation],['Estatus',pac.status]];
+    parts.push(`<h2 class="rep-h2">Resumen del expediente</h2><table class="rep-tbl">${rows.map(([k,v])=>`<tr><th>${k}</th><td>${esc(v||'—')}</td></tr>`).join('')}
+      ${g.length?`<tr><th>Tutor(es)</th><td>${g.map(x=>esc(x.full_name)+' ('+esc(x.relationship||'—')+(x.phone?' · '+esc(x.phone):'')+')').join('<br>')}</td></tr>`:''}</table>`);
+  }
+  if(secs.includes('historia')){
+    let h={sections:{}};try{const r=await api('rpc/historia_de',{method:'POST',body:{pid:pac.id}});h=(r&&r[0])||{sections:{}};}catch(e){}
+    const S=h.sections||{};
+    const body=HSECS.map(([k,lbl])=>{const s=S[k];if(!s)return '';if(s.no_evaluado)return `<tr><th>${esc(lbl)}</th><td><i>No evaluado</i></td></tr>`;if(!s.valor)return '';return `<tr><th>${esc(lbl)}</th><td>${esc(s.valor)}</td></tr>`;}).filter(Boolean).join('');
+    const extra=[['Impresión clínica',h.clinical_impression],['Objetivos terapéuticos',h.therapeutic_goals],['Plan de intervención',h.intervention_plan],['Pronóstico',h.prognosis],['Observaciones',h.observations],['Diagnóstico profesional',h.professional_diagnosis]].filter(([,v])=>v).map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('');
+    parts.push(`<h2 class="rep-h2">Historia clínica</h2>${(body||extra)?`<table class="rep-tbl">${body}${extra}</table>`:'<p class="rep-empty">Sin historia registrada.</p>'}`);
+  }
+  if(secs.includes('consultas')){
+    let enc=[];try{enc=await api('encounters?patient_id=eq.'+pac.id+'&select=id,starts_at,modality,objective,clinical_notes(format,subjective,objective,assessment,plan,free_text,signed_at,note_addenda(reason,content,created_at))&order=starts_at.desc',{schema:'clinico'});}catch(e){}
+    parts.push(`<h2 class="rep-h2">Consultas y notas</h2>${enc.length?enc.map(e=>{const n=(e.clinical_notes&&e.clinical_notes[0])||{};
+      const body=n.format==='libre'?esc(n.free_text||''):[['S','subjective'],['O','objective'],['A','assessment'],['P','plan']].map(([lp,k])=>n[k]?`<b>${lp}:</b> ${esc(n[k])}`:'').filter(Boolean).join('<br>');
+      const adds=(n.note_addenda||[]).map(a=>`<div class="rep-add"><b>Adenda</b> · ${esc(fmtDate(a.created_at))} · ${esc(a.reason||'')}<br>${esc(a.content||'')}</div>`).join('');
+      return `<div class="rep-enc"><b>${esc(fmtDate(e.starts_at))}</b> · ${esc(e.modality||'—')} ${n.signed_at?'· <i>Firmada '+esc(fmtDate(n.signed_at))+'</i>':'· <i>Borrador</i>'}${e.objective?'<br><span class="rep-obj">Objetivo: '+esc(e.objective)+'</span>':''}<div>${body||'<i>Sin nota</i>'}</div>${adds}</div>`;
+    }).join(''):'<p class="rep-empty">Sin consultas registradas.</p>'}`);
+  }
+  if(secs.includes('riesgos')){
+    let rs=[];try{rs=await api('rpc/riesgos_de',{method:'POST',body:{pid:pac.id}});}catch(e){}
+    parts.push(`<h2 class="rep-h2">Valoraciones de riesgo</h2><p class="rep-note">Registro operativo de acompañamiento; no constituye diagnóstico.</p>${rs.length?rs.map(r=>{const d=r.domains||{};
+      const chips=RDOMS.map(([k,lbl])=>{const v=d[k];return (v&&v.nivel&&v.nivel!=='sin_dato')?`${esc(lbl)}: <b>${esc(NIVLBL[v.nivel]||v.nivel)}</b>${v.nota?' — '+esc(v.nota):''}`:'';}).filter(Boolean).join('<br>');
+      return `<div class="rep-enc"><b>${esc(fmtDate(r.created_at))}</b>${r.emergency_contacted?' · Emergencia contactada':''}<div>${chips||'<i>Sin dominios marcados</i>'}</div>${r.protective_factors?'<div><b>Protectores:</b> '+esc(r.protective_factors)+'</div>':''}${r.actions_taken?'<div><b>Acciones:</b> '+esc(r.actions_taken)+'</div>':''}${r.referral?'<div><b>Derivación:</b> '+esc(r.referral)+'</div>':''}${r.follow_up?'<div><b>Seguimiento:</b> '+esc(r.follow_up)+'</div>':''}</div>`;
+    }).join(''):'<p class="rep-empty">Sin valoraciones de riesgo registradas.</p>'}`);
+  }
+  parts.push(`<div class="rep-foot">Generado por el sistema de acompañamiento · ${esc(SESS&&SESS.email||'')} · Herramienta orientativa, no sustituye valoración profesional.</div>`);
+  out.innerHTML=`<div id="repDoc" class="rep-doc">${parts.join('')}</div>`;
+  document.getElementById('rep_pdf').style.display='';
+  document.getElementById('rep_msg').textContent='Vista previa lista. Revise el contenido antes de exportar.';
+}
+async function imprimirReporte(pid){
+  const secs=[...document.querySelectorAll('.rsec:checked')].map(x=>x.value);
+  try{await rpc('reporte_registrar',{patient_id:pid,kind:'expediente',params:{sections:secs,generated_at:new Date().toISOString()}});}catch(e){}
+  document.body.classList.add('printing');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('printing'),500);
+}
+
+/* ---- Pruebas y enlaces (centro de ligas del equipo de campo) ---- */
+function baseURL(){const u=location.href.split('#')[0].split('?')[0];return u.replace(/[^/]*$/,'');}
+async function vEnlaces(v){
+  const base=baseURL();
+  const links=[
+    {id:'lk_ins',ic:'🎮',t:'Instrumento · equipo de campo',url:base+'instrumento.html',
+     d:'Los juegos que se muestran al menor desde el teléfono. Al abrirlo por primera vez pide la <b>clave de aplicación</b> (se guarda en el teléfono) y funciona sin internet con cola de sincronización.'},
+    {id:'lk_dsh',ic:'📈',t:'Tablero de campo · métricas',url:base+'dashboard.html',
+     d:'Vista de solo lectura con las métricas de las sesiones. Pide una <b>clave de acceso</b> de tablero. Útil para revisar avances sin entrar al panel completo.'}
+  ];
+  v.innerHTML=`
+    <div class="disc">Comparte estas ligas con el equipo de campo. Las <b>claves</b> (de aplicación y de tablero) se entregan por canal privado y <b>no</b> van dentro del enlace. Herramienta de acompañamiento; <b>no constituye diagnóstico</b>.</div>
+    ${links.map(l=>`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-size:1.4rem">${l.ic}</div>
+        <div><b style="color:var(--navy)">${l.t}</b><div class="savehint">${l.d}</div></div></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+        <input id="${l.id}" readonly value="${esc(l.url)}" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid #d7dee6;border-radius:8px;background:#f6f9fc;font-size:.82rem">
+        <button class="btn-sm acc" onclick="copiar('${l.id}',this)">Copiar liga</button>
+        <a class="btn-line" href="${esc(l.url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir ↗</a>
+      </div></div>`).join('')}
+    <div class="card"><b style="color:var(--navy)">Cómo empezar una prueba</b>
+      <ol style="margin:8px 0 0;padding-left:20px;font-size:.86rem;line-height:1.7;color:#41505f">
+        <li>Da de alta al participante en <b>Participantes</b> (folio automático; captura al tutor si es menor).</li>
+        <li>Abre el <b>Instrumento</b> en el teléfono con la clave de aplicación y aplica los juegos con el menor.</li>
+        <li>Revisa los resultados en <b>Resumen</b> / <b>Tablero de campo</b> y registra lo observado en la <b>ficha</b> (historia, consultas, riesgos).</li>
+        <li>Genera el <b>Reporte / PDF</b> desde la ficha cuando lo necesites.</li>
+      </ol></div>`;
+}
+function copiar(id,btn){const inp=document.getElementById(id);const txt=inp.value;
+  const done=()=>{const o=btn.textContent;btn.textContent='¡Copiado!';setTimeout(()=>btn.textContent=o,1400);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{inp.select();document.execCommand('copy');done();});}
+  else{inp.select();document.execCommand('copy');done();}
+}
+
+/* ---- Alta de usuario (solo admin) ---- */
+function formUsuario(){
+  modal(`<h3>Nuevo usuario</h3>
+   <div class="fld"><label>Nombre completo</label><input id="u_full"></div>
+   <div class="fld"><label>Correo</label><input id="u_email" type="email"></div>
+   <div class="fld"><label>Contraseña temporal (mín. 8)</label><input id="u_pass"></div>
+   <div class="fld"><label>Rol</label><select id="u_role">
+     <option value="facilitador">Facilitador</option><option value="capturista">Capturista</option>
+     <option value="clinico">Clínico</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></div>
+   <div class="modact"><button class="btn-line" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn-sm acc" id="u_save" onclick="guardarUsuario()">Crear</button></div>`);
+}
+async function guardarUsuario(){
+  if(!val('u_full')||!val('u_email')||val('u_pass').length<8){alert('Nombre, correo y contraseña (mín. 8 caracteres) son obligatorios');return;}
+  const btn=document.getElementById('u_save');btn.disabled=true;btn.textContent='Creando…';
+  try{await rpc('usuario_crear',{full_name:val('u_full'),email:val('u_email'),password:val('u_pass'),role:val('u_role')});cerrarModal();show('usuarios');}
+  catch(e){btn.disabled=false;btn.textContent='Crear';alert('Error: '+e.message);}
+}
 </script>
 </body>
 </html>
