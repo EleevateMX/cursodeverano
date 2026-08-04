@@ -85,6 +85,8 @@
       <option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option></select>
     <select id="fCorte"><option value="">Todos los cortes</option>
       <option value="inicio">Inicio</option><option value="medio">Medio</option><option value="cierre">Cierre</option></select>
+    <select id="fSexo"><option value="">Ambos sexos</option>
+      <option value="F">Niñas (F)</option><option value="M">Niños (M)</option></select>
     <select id="fNino"><option value="">Todos los participantes</option></select>
     <label class="switch"><input type="checkbox" id="anon" checked> Ocultar nombres</label>
     <button class="btn-acc" onclick="loadData()">↻ Actualizar</button>
@@ -124,6 +126,21 @@
         <h2>Evolución por semana</h2>
         <p class="sub">Ansiedad social y red de apoyo, semanas 1–3</p>
         <div class="chartbox"><canvas id="chSemana"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Ansiedad social por sexo</h2>
+        <p class="sub">Promedio 0–100 (solo sesiones con sexo registrado)</p>
+        <div class="chartbox"><canvas id="chSexo"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Acuerdo entre observadores</h2>
+        <p class="sub">Pares automáticos: mismo niño, misma actividad y corte, con dos observadores distintos</p>
+        <div id="acuerdoBox" style="font-size:.85rem"></div>
+      </div>
+      <div class="card full">
+        <h2>Casos a canalizar / vigilar</h2>
+        <p class="sub">Protocolo de canalización: <b>canalizar</b> si ansiedad social ≥ 65 o nivel «marcado» en cualquier sesión · <b>vigilar</b> si el último nivel es «moderado». No es diagnóstico: se informa al tutor con recomendación de valoración profesional.</p>
+        <div id="canalBox"></div>
       </div>
       <div class="card full">
         <h2>Participantes</h2>
@@ -208,7 +225,8 @@ function fillNinoFilter(){
 function filtered(){
   const b=document.getElementById('fBanda').value,s=document.getElementById('fSemana').value,
         c=document.getElementById('fCorte').value,n=document.getElementById('fNino').value;
-  return ROWS.filter(r=>(!b||bandOf(r)===b)&&(!s||String(r.semana)===s)&&(!c||(r.modo||'').toLowerCase()===c)&&(!n||r.nino_codigo===n));
+  const sx=document.getElementById('fSexo').value;
+  return ROWS.filter(r=>(!b||bandOf(r)===b)&&(!s||String(r.semana)===s)&&(!c||(r.modo||'').toLowerCase()===c)&&(!n||r.nino_codigo===n)&&(!sx||(r.sexo||'').toUpperCase()===sx));
 }
 function destroy(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
@@ -279,6 +297,69 @@ function render(){
       plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
       scales:{y:{min:0,max:100,ticks:{stepSize:25}},x:{grid:{display:false}}}}});
 
+  // Chart: por sexo
+  destroy('sexo');
+  const sxRows=rows.filter(r=>['M','F'].includes((r.sexo||'').toUpperCase()));
+  const sxAvg=(sx,key)=>{const v=sxRows.filter(r=>(r.sexo||'').toUpperCase()===sx).map(r=>+r[key]).filter(x=>!isNaN(x));return v.length?R(avg(v)):null;};
+  const nF=sxRows.filter(r=>(r.sexo||'').toUpperCase()==='F').length,nM=sxRows.filter(r=>(r.sexo||'').toUpperCase()==='M').length;
+  charts.sexo=new Chart(document.getElementById('chSexo'),{type:'bar',
+    data:{labels:[`Niñas (n=${nF})`,`Niños (n=${nM})`],datasets:[
+      {label:'Ansiedad social',data:[sxAvg('F','ansiedad_social'),sxAvg('M','ansiedad_social')],backgroundColor:C.accent,borderRadius:8,maxBarThickness:52},
+      {label:'Red de apoyo',data:[sxAvg('F','red_apoyo'),sxAvg('M','red_apoyo')],backgroundColor:C.green,borderRadius:8,maxBarThickness:52}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{y:{min:0,max:100,ticks:{stepSize:25}},x:{grid:{display:false}}}}});
+
+  // Acuerdo entre observadores (pares: mismo niño + corte + actividad, observadores distintos)
+  const grupos={};
+  rows.forEach(r=>{const act=(r.respuestas&&r.respuestas.actividad)||'';const k=r.nino_codigo+'|'+(r.modo||'')+'|'+act;(grupos[k]=grupos[k]||[]).push(r);});
+  const pares=[];
+  Object.values(grupos).forEach(g=>{
+    const obsSet={};g.forEach(r=>{const o=(r.observador||'').trim().toLowerCase();if(o&&!(o in obsSet)&&!isNaN(+r.ansiedad_social))obsSet[o]=+r.ansiedad_social;});
+    const vals=Object.values(obsSet);if(vals.length>=2)pares.push([vals[0],vals[1]]);
+  });
+  const aBox=document.getElementById('acuerdoBox');
+  if(pares.length<3){
+    aBox.innerHTML=`<p style="color:var(--muted)">Aún no hay suficientes pares (hay ${pares.length}, se requieren ≥ 3).<br>Para generarlos: dos facilitadores registran <b>al mismo niño, misma actividad y corte</b>, cada uno con su nombre de observador y marcando «doble observación» en el cierre.</p>`;
+  }else{
+    const n=pares.length;
+    const tol=pares.filter(p=>Math.abs(p[0]-p[1])<=10).length/n*100;
+    const mx=avg(pares.map(p=>p[0])),my=avg(pares.map(p=>p[1]));
+    let sxy=0,sx2=0,sy2=0;pares.forEach(p=>{const dx=p[0]-mx,dy=p[1]-my;sxy+=dx*dy;sx2+=dx*dx;sy2+=dy*dy;});
+    const rP=(sx2&&sy2)?(sxy/Math.sqrt(sx2*sy2)):null;
+    const dif=avg(pares.map(p=>p[0]-p[1]));
+    const ok=tol>=80&&rP!=null&&rP>=.70;
+    aBox.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:8px">
+      <div><div style="font-size:1.3rem;font-weight:800;color:var(--navy)">${n}</div><div style="font-size:.7rem;color:var(--muted);font-weight:700">PARES</div></div>
+      <div><div style="font-size:1.3rem;font-weight:800;color:var(--navy)">${Math.round(tol)}%</div><div style="font-size:.7rem;color:var(--muted);font-weight:700">ACUERDO ±10 PTS</div></div>
+      <div><div style="font-size:1.3rem;font-weight:800;color:var(--navy)">${rP==null?'—':rP.toFixed(2)}</div><div style="font-size:.7rem;color:var(--muted);font-weight:700">r DE PEARSON</div></div>
+      <div><div style="font-size:1.3rem;font-weight:800;color:var(--navy)">${(dif>0?'+':'')+Math.round(dif)}</div><div style="font-size:.7rem;color:var(--muted);font-weight:700">DIF. MEDIA</div></div></div>
+    <p style="margin:0;font-weight:700;color:${ok?C.green:C.red}">${ok?'✓ Acuerdo aceptable: la rúbrica se aplica con criterio común.':'✗ Bajo el criterio (±10 ≥ 80% y r ≥ .70): hagan una sesión de calibración entre observadores antes del siguiente corte.'}</p>`;
+  }
+
+  // Casos a canalizar / vigilar (protocolo Instrumento 9, escala 0-100)
+  const byNinoC={};
+  rows.forEach(r=>{(byNinoC[r.nino_codigo]=byNinoC[r.nino_codigo]||[]).push(r);});
+  const canal=[],vigilar=[];
+  Object.keys(byNinoC).sort().forEach(cod=>{
+    const rs=byNinoC[cod].slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const last=rs[rs.length-1];
+    const motivos=[];
+    rs.forEach(r=>{const v=+r.ansiedad_social;
+      if(!isNaN(v)&&v>=65)motivos.push(`A. social ${R(v)} (≥ 65) en ${(r.modo||'?')}`);
+      else if(r.nivel_global==='marcado')motivos.push(`nivel «marcado» en ${(r.modo||'?')}`);});
+    const flagsComp=rs.some(r=>r.respuestas&&(r.respuestas.verificacion_ok===false||(r.respuestas.practica&&r.respuestas.practica.ok===false)));
+    if(motivos.length)canal.push({cod,last,motivos:[...new Set(motivos)],flagsComp});
+    else if(last.nivel_global==='moderado')vigilar.push({cod,last,flagsComp});
+  });
+  const cBox=document.getElementById('canalBox');
+  if(!canal.length&&!vigilar.length){
+    cBox.innerHTML='<p style="color:var(--muted);font-size:.85rem">Ningún participante supera los umbrales con los filtros activos.</p>';
+  }else{
+    cBox.innerHTML=(canal.length?`<p style="font-weight:800;color:${C.red};margin:4px 0 6px">Canalizar (${canal.length})</p><ul style="margin:0 0 10px;padding-left:18px;font-size:.85rem">${canal.map(x=>`<li><b>${esc(x.cod)}</b> (${esc(bandOf(x.last))}) — ${x.motivos.map(esc).join(' · ')}${x.flagsComp?' · <span style="color:'+C.gold+'">⚠ revisar comprensión</span>':''} → activar protocolo: verificar, contrastar fuentes y hablar con el tutor (guion del Instrumento 9).</li>`).join('')}</ul>`:'')+
+    (vigilar.length?`<p style="font-weight:800;color:${C.gold};margin:4px 0 6px">Vigilar (${vigilar.length})</p><ul style="margin:0;padding-left:18px;font-size:.85rem">${vigilar.map(x=>`<li><b>${esc(x.cod)}</b> (${esc(bandOf(x.last))}) — último nivel «moderado»${x.flagsComp?' · <span style="color:'+C.gold+'">⚠ revisar comprensión</span>':''}: seguimiento cercano en el siguiente corte.</li>`).join('')}</ul>`:'');
+  }
+
   // Tabla participantes
   const tb=document.querySelector('#tbl tbody');tb.innerHTML='';
   const byNino={};
@@ -306,18 +387,21 @@ function render(){
 function exportCSV(){
   const rows=filtered();
   if(!rows.length){alert('No hay datos con estos filtros.');return;}
-  const head=['fecha','codigo','nombre','edad','banda','semana','corte','actividad','ansiedad_social','ansiedad_general','dependencia','inatencion','red_apoyo','nivel','observador','notas'];
+  const head=['fecha','codigo','nombre','edad','sexo','banda','semana','corte','actividad','ansiedad_social','ansiedad_general','dependencia','inatencion','red_apoyo','nivel','observador','doble_obs','verificacion_ok','notas'];
   const esc=v=>{v=(v==null?'':String(v)).replace(/"/g,'""');return /[",\n]/.test(v)?`"${v}"`:v;};
   const lines=[head.join(',')].concat(rows.map(r=>[
-    r.created_at,r.nino_codigo,r.nino_nombre,r.edad,bandOf(r),r.semana,r.modo,
+    r.created_at,r.nino_codigo,r.nino_nombre,r.edad,r.sexo||'',bandOf(r),r.semana,r.modo,
     (r.respuestas&&r.respuestas.actividad)||'',r.ansiedad_social,r.ansiedad_general,r.dependencia,
-    r.inatencion,r.red_apoyo,r.nivel_global,r.observador,r.notas].map(esc).join(',')));
+    r.inatencion,r.red_apoyo,r.nivel_global,r.observador,
+    (r.respuestas&&r.respuestas.doble_obs)?'SI':'',
+    (r.respuestas&&r.respuestas.verificacion_ok===false)?'NO':((r.respuestas&&r.respuestas.verificacion_ok===true)?'SI':''),
+    r.notas].map(esc).join(',')));
   const blob=new Blob(["﻿"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='reporte_ansiedad_social_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
 }
 
-['fBanda','fSemana','fCorte','fNino','anon'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+['fBanda','fSemana','fCorte','fSexo','fNino','anon'].forEach(id=>document.getElementById(id).addEventListener('change',render));
 loadData();
 </script>
 </body>

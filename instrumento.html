@@ -192,8 +192,8 @@ const WORRIES=[{id:'solo',t:'Quedarme solo',tag:'separacion',c:'#e0679a'},{id:'m
 const ESC_KID=[{id:'frente',t:'La maestra te pide pasar al frente a bailar o decir tu nombre.'},{id:'invitan',t:'Unos niños te invitan a jugar con ellos.'},{id:'alberca',t:'Es hora de la alberca y hay muchos niños mirando.'},{id:'despedida',t:'Tu mamá o papá se despide y se va del curso.'}];
 const ESC_TEEN=[{id:'frente',t:'Tienes que exponer o presentarte frente a todo el grupo.'},{id:'rian',t:'Sientes que podrían criticarte o burlarse de ti.'},{id:'invitan',t:'Un grupo nuevo te invita a integrarte a su actividad.'},{id:'despedida',t:'Tienes que decidir algo sin tus amigos cerca.'}];
 /* Subescala de fobia social — ítems orientativos tipo SCAS (0-3). Redacción propia; usar la versión oficial del SCAS para el estudio formal. */
-const SCAS_89=[{id:'s1',t:'Me da miedo hacer cosas mientras otros me miran.',tag:'social'},{id:'s2',t:'Me preocupa hacer el ridículo frente a los demás.',tag:'social'},{id:'s3',t:'Me pongo nervioso si tengo que hablar o bailar frente al grupo.',tag:'social'},{id:'s4',t:'Me da pena unirme a jugar con niños que no conozco.',tag:'social'}];
-const SCAS_TEEN=[{id:'s1',t:'Me da miedo hacer cosas mientras me miran los demás.',tag:'social'},{id:'s2',t:'Me preocupa hacer el ridículo o quedar mal frente a otros.',tag:'social'},{id:'s3',t:'Me pongo nervioso/a si tengo que hablar o actuar frente al grupo.',tag:'social'},{id:'s4',t:'Me preocupa mucho lo que los demás piensen de mí.',tag:'social'},{id:'s5',t:'Evito integrarme a grupos donde no conozco a nadie.',tag:'social'},{id:'s6',t:'Me cuesta empezar a platicar con alguien nuevo.',tag:'social'}];
+const SCAS_89=[{id:'s1',t:'Me da miedo hacer cosas mientras otros me miran.',tag:'social'},{id:'s2',t:'Me preocupa hacer el ridículo frente a los demás.',tag:'social'},{id:'s3',t:'Me pongo nervioso si tengo que hablar o bailar frente al grupo.',tag:'social'},{id:'s4',t:'Me da pena unirme a jugar con niños que no conozco.',tag:'social'},{id:'v1',t:'En el curso de verano hay actividades y juegos.',tag:'verificacion'}];
+const SCAS_TEEN=[{id:'s1',t:'Me da miedo hacer cosas mientras me miran los demás.',tag:'social'},{id:'s2',t:'Me preocupa hacer el ridículo o quedar mal frente a otros.',tag:'social'},{id:'s3',t:'Me pongo nervioso/a si tengo que hablar o actuar frente al grupo.',tag:'social'},{id:'s4',t:'Me preocupa mucho lo que los demás piensen de mí.',tag:'social'},{id:'s5',t:'Evito integrarme a grupos donde no conozco a nadie.',tag:'social'},{id:'s6',t:'Me cuesta empezar a platicar con alguien nuevo.',tag:'social'},{id:'v1',t:'En el curso de verano hay actividades y juegos.',tag:'verificacion'}];
 const BANDS={
  '6-7':{label:'6–7',mode:'kid',foco:true,mods:['checkin','cuentos','atencion','globos','memorama'],esc:ESC_KID,reasons:REASONS_KID,acc:ACC_KID,worries:WORRIES},
  '8-9':{label:'8–9',mode:'kid',mods:['checkin','cuentos','escala','atencion','memorama'],esc:ESC_KID,reasons:REASONS_KID,acc:ACC_KID,escala:SCAS_89},
@@ -225,6 +225,7 @@ function inicio(){
       <div id="otro" class="field hidden"><label>Nombre y código</label><input id="on" placeholder="Nombre"><div style="height:8px"></div><input id="oc" placeholder="Código (ej. N-03)"></div>
       <div class="row">
         <div class="field" style="flex:1"><label>Edad</label><select id="edad">${[6,7,8,9,10,11,12,13,14].map(e=>`<option ${e===6?'selected':''}>${e}</option>`).join('')}</select></div>
+        <div class="field" style="flex:1"><label>Sexo</label><select id="sexo"><option value="">—</option><option value="F">Niña (F)</option><option value="M">Niño (M)</option></select></div>
         <div class="field" style="flex:1"><label>Corte</label><select id="corte"><option>Inicio</option><option>Medio</option><option>Cierre</option></select></div>
       </div>
       <div class="row">
@@ -251,7 +252,7 @@ function entrar(){
   sound=document.getElementById('snd').checked;
   try{const ca=document.getElementById('claveApp').value.trim();if(ca)localStorage.setItem('obs_clave_app',ca);}catch(e){}
   const bandKey=bandFor(edad),band=BANDS[bandKey];
-  S={nino,edad,bandKey,band,semana:+document.getElementById('semana').value,corte:document.getElementById('corte').value,
+  S={nino,edad,bandKey,band,sexo:document.getElementById('sexo').value||null,semana:+document.getElementById('semana').value,corte:document.getElementById('corte').value,
      actividad:document.getElementById('act').value,observador:document.getElementById('obs').value.trim(),t0:Date.now(),done:{},data:{escenarios:[]}};
   document.body.className=band.mode;menu();
 }
@@ -276,7 +277,25 @@ function launch(k){MODEFS[k].run();}
 function finish(k){S.done[k]=true;if(S.edad<12){confetti();chime(784);toast('¡Actividad completada! ⭐');}menu();}
 
 /* ===== CHECK-IN (caras tras la actividad / slider en grandes) ===== */
-function m_checkin(){S.data.checkin={};S.edad>=12?ck_slider():ck_face();}
+function m_checkin(){S.data.checkin={};if(S.edad>=12)return ck_slider();if(S.edad<=7&&!S.data.practica)return ck_practica();ck_face();}
+/* Ítem de práctica (6-7 años): verifica que el niño comprende las caras antes de medir.
+   No se registra como dato del constructo; solo queda la bandera practica.ok. */
+function ck_practica(){
+  const q="Vamos a practicar. Imagina que te dan tu helado favorito. ¿Cómo te sentirías? Señala la carita.";
+  app.innerHTML=`<div class="screen">${head('Práctica')}
+    <div class="card">${P(q)}
+      <div class="faces" id="face">${[0,1,2,3].map(v=>`<div class="face" data-v="${v}">${faceSVG([0,1,3,4][v],44)}<small>${['Bien','Tranquilo','Nervioso','Muy mal'][v]}</small></div>`).join('')}</div>
+      <p class="muted" style="font-size:.78rem;margin-top:8px">Facilitador: si señala una cara que no corresponde, nombra cada cara («esta es contento, esta es nervioso…») y practica una vez más. Si sigue sin comprender, registra la sesión sin este módulo.</p></div>
+    <div class="foot"><button class="btn btn-primary" id="nx" disabled>Seguir</button></div></div>`;
+  let val=null,intentos=0;
+  bindFaces('face',v=>{val=v;intentos++;document.getElementById('nx').disabled=false;
+    if(v<=1){speak('¡Muy bien!');}
+    else if(intentos===1){speak('Mira: esta carita es contento. Si te dan tu helado favorito, ¿cómo te sentirías? Inténtalo otra vez.');toast('Re-explica las caras y deja que lo intente de nuevo.',3600);}});
+  document.getElementById('nx').onclick=()=>{S.data.practica={helado:val,intentos,ok:val<=1};
+    if(!S.data.practica.ok)toast('Práctica no superada: la sesión quedará marcada "revisar comprensión".',3800);
+    ck_face();};
+  autoRead(q);
+}
 function ck_face(){
   const q=`¿Cómo te sentiste en ${S.actividad.toLowerCase()} hoy? Sube o baja al ayudante en el termómetro.`;
   const LBL=['Muy bien','Bien','Normal','Nervioso','Muy mal'],COL=['#4bbf73','#8fd14f','#E9B10A','#f0883e','#e0574f'];
@@ -355,9 +374,22 @@ function m_escala(){
   app.innerHTML=`<div class="screen">${head('¿Qué tanto te pasa?')}
     <div class="card">${P(q)}${items.map(it=>`<div style="margin:14px 0"><div style="font-weight:700;color:var(--navy);font-size:.95rem">${it.t}</div>
       <div class="rate" data-id="${it.id}">${opts.map((o,v)=>`<button data-v="${v}">${o}</button>`).join('')}</div></div>`).join('')}</div>
-    <div class="foot"><button class="btn btn-primary" id="nx" disabled onclick="finish('escala')">Listo</button></div></div>`;
+    <div class="foot"><button class="btn btn-primary" id="nx" disabled onclick="escalaListo()">Listo</button></div></div>`;
   document.querySelectorAll('.rate').forEach(r=>r.querySelectorAll('button').forEach(b=>b.onclick=()=>{r.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');S.data.escala[r.dataset.id]=+b.dataset.v;if(Object.keys(S.data.escala).length===items.length)document.getElementById('nx').disabled=false;}));
   if(S.edad<=9)autoRead(items[0].t);else autoRead(q);
+}
+/* Ítem de verificación (v1, no suma al puntaje): afirmación obviamente cierta, se espera 2-3.
+   Si responde 0-1, probablemente no comprendió la escala o respondió al azar. */
+function escalaListo(){
+  const v=S.data.escala&&S.data.escala.v1;
+  S.data.verificacion_ok=(v==null)?null:(v>=2);
+  if(S.data.verificacion_ok===false&&!S.data.verificacion_reintento){
+    S.data.verificacion_reintento=true;
+    toast('Revisa la última pregunta con el niño: es una afirmación cierta (se espera "Muchas veces" o "Siempre"). Re-explica la escala con un ejemplo (¿cuánto te pasa que desayunas en la mañana?) y corrige si hace falta.',6000);
+    return;
+  }
+  if(S.data.verificacion_ok===false)toast('Verificación no superada: la sesión se marcará "revisar comprensión" en la base.',4200);
+  finish('escala');
 }
 
 /* ===== ATENCIÓN ===== */
@@ -467,9 +499,13 @@ function cierre(){
   app.innerHTML=`<div class="screen"><div class="topbar"><button class="back" onclick="menu()">‹ Menú</button><span class="badge">Registro observacional</span></div>
     <div class="card"><h2>Cierre del observador</h2><p class="muted">Registro del facilitador (0 = nada, 3 = mucho) sobre la conducta real en <b>${S.actividad}</b> · corte ${S.corte}.</p>
       ${OBSITEMS.map(it=>`<div style="margin:12px 0"><div style="font-weight:700;color:var(--navy);font-size:.9rem">${it.t}</div><div class="rate" data-k="${it.k}">${[0,1,2,3].map(v=>`<button data-v="${v}">${v}</button>`).join('')}</div></div>`).join('')}
-      <div class="field"><label>Observaciones para el expediente</label><textarea id="notas" rows="3" placeholder="Detonantes, cómo procediste, avances…"></textarea></div></div>
+      <div class="field"><label>Observaciones para el expediente</label><textarea id="notas" rows="3" placeholder="Detonantes, cómo procediste, avances…"></textarea></div>
+      <label style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--navy);font-size:.85rem;margin-top:6px"><input type="checkbox" id="dobleObs" style="width:18px;height:18px"> Doble observación (soy el 2.º observador de este niño en esta actividad)</label>
+      <p class="muted" style="font-size:.74rem;margin:6px 0 0">Para el acuerdo entre observadores: dos facilitadores registran al mismo niño, misma actividad y corte, cada uno desde su teléfono y <b>sin comentar sus puntajes</b>. El dashboard calcula el acuerdo automáticamente.</p></div>
     <div class="foot"><button class="btn btn-primary" id="nx" disabled onclick="resultados()">Ver resultados</button></div></div>`;
   document.getElementById('notas').oninput=e=>S.data.notas=e.target.value;
+  document.getElementById('dobleObs').onchange=e=>S.data.doble_obs=e.target.checked||null;
+  if(S.data.doble_obs)document.getElementById('dobleObs').checked=true;
   document.querySelectorAll('.rate').forEach(r=>r.querySelectorAll('button').forEach(b=>b.onclick=()=>{r.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');S.data.obs_ratings[r.dataset.k]=+b.dataset.v;if(Object.keys(S.data.obs_ratings).length===OBSITEMS.length)document.getElementById('nx').disabled=false;}));
 }
 
@@ -560,7 +596,7 @@ async function colaSync(){
 }
 window.addEventListener('online',colaSync);
 setTimeout(colaSync,1500);
-function payload(){const r=S.scores||score();return {id:(S.saveId=S.saveId||genId()),nino_codigo:S.nino.codigo,nino_nombre:S.nino.nombre,edad:S.edad,semana:S.semana,observador:S.observador||null,dispositivo:(S.bandKey+' | '+navigator.userAgent).slice(0,90),duracion_seg:S.dur||null,modo:S.corte.toLowerCase(),juegos:S.bandKey+':'+Object.keys(S.done).join(','),ansiedad_general:r.ansiedad_general,ansiedad_social:r.ansiedad_social,inatencion:r.inatencion,dependencia:r.dependencia,red_apoyo:r.red_apoyo,nivel_global:r.nivel_global,respuestas:{banda:S.bandKey,actividad:S.actividad,corte:S.corte,...S.data},notas:(document.querySelector('#notas')?.value)||S.data.notas||null};}
+function payload(){const r=S.scores||score();return {id:(S.saveId=S.saveId||genId()),nino_codigo:S.nino.codigo,nino_nombre:S.nino.nombre,edad:S.edad,sexo:S.sexo||null,semana:S.semana,observador:S.observador||null,dispositivo:(S.bandKey+' | '+navigator.userAgent).slice(0,90),duracion_seg:S.dur||null,modo:S.corte.toLowerCase(),juegos:S.bandKey+':'+Object.keys(S.done).join(','),ansiedad_general:r.ansiedad_general,ansiedad_social:r.ansiedad_social,inatencion:r.inatencion,dependencia:r.dependencia,red_apoyo:r.red_apoyo,nivel_global:r.nivel_global,respuestas:{banda:S.bandKey,actividad:S.actividad,corte:S.corte,...S.data},notas:(document.querySelector('#notas')?.value)||S.data.notas||null};}
 async function guardar(){const btn=document.getElementById('save');btn.disabled=true;btn.textContent='Guardando…';
   const p=payload();
   try{await enviar(p);btn.textContent='Guardado ✓';btn.style.background='var(--green)';toast('Sesión guardada · id '+String(p.id).slice(0,8));colaSync();
